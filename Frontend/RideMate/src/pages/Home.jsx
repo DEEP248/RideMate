@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 const Home = () => {
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-100">
-      <div className="relative w-full max-w-sm min-h-screen bg-white flex flex-col">
+      <div className="relative w-full max-w-sm min-h-screen bg-white flex flex-col pt-10">
         {/* Top Image Section */}
         <div
           className="w-full shrink-0 bg-no-repeat bg-top bg-contain"
@@ -17,7 +17,7 @@ const Home = () => {
         />
 
         {/* Logo + Right Side Tag */}
-        <div className="absolute top-4 left-0 right-0 z-10 flex items-center justify-between px-4">
+        <div className="absolute top-4 left-0 right-0 z-10 flex items-center justify-between px-5">
           <div className="flex items-center gap-3">
             <img
               className="w-10 h-10 object-contain"
