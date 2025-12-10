@@ -25,7 +25,6 @@ const CaptainLogin = () => {
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-100">
       {/* Phone-size card */}
       <div className="relative w-full max-w-sm min-h-screen bg-white flex flex-col px-5 pb-6 pt-20">
-
         {/* Header: Logo + tag (same as Home & User Login) */}
         <div className="absolute top-4 left-0 right-0 z-10 flex items-center justify-between px-5">
           <div className="flex items-center gap-3">
