@@ -4,13 +4,11 @@ import axios from "axios";
 import { UserDataContext } from "../context/UserContext";
 import { useContext } from "react";
 
-/*************  ✨ Windsurf Command ⭐  *************/
 /**
  * UserLogin is a React component for logging in to the RideMate app.
  * It provides a form with email and password fields and submits the form to the backend API.
  * If the submission is successful, it stores the user data and token in local storage and navigates to the home page.
  */
-/*******  d98919cf-66de-47c9-b8b3-36fddb66996e  *******/
 const UserLogin = () => {
   // ------------------------------
   // Local state for login form

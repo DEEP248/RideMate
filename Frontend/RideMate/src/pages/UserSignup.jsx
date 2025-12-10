@@ -3,14 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { UserDataContext } from "../context/UserContext";
 import { useContext } from "react";
-/*************  ✨ Windsurf Command ⭐  *************/
-/**
- * UserSignup is a React component for registering a new user account.
- * It provides a form with first name, last name, email, and password fields and submits the form to the backend API.
- * If the submission is successful, it stores the user data and token in local storage and navigates to the home page.
- * @returns {JSX.Element} - The React component for user signup.
 
-/*******  f7920f7a-03a7-4c1e-8857-8e622ffe415f  *******/
 const UserSignup = () => {
   // ------------------------------
   // Local signup state
