@@ -17,7 +17,7 @@ const CaptainSignup = () => {
   const submitHandler = (e) => {
     e.preventDefault();
     setCaptainData({
-      fullName: { firstName, lastName },
+      fullname: { firstname: firstName, lastname: lastName },
       email,
       password,
     });
@@ -148,7 +148,7 @@ const CaptainSignup = () => {
 
                 <span className="relative z-10 transition-colors duration-300 
                                  group-hover:text-black tracking-[0.25em] uppercase">
-                  Sign Up
+                  Create Account
                 </span>
               </button>
             </form>

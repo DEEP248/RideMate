@@ -1,6 +1,16 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { UserDataContext } from "../context/UserContext";
+import { useContext } from "react";
+/*************  ✨ Windsurf Command ⭐  *************/
+/**
+ * UserSignup is a React component for registering a new user account.
+ * It provides a form with first name, last name, email, and password fields and submits the form to the backend API.
+ * If the submission is successful, it stores the user data and token in local storage and navigates to the home page.
+ * @returns {JSX.Element} - The React component for user signup.
 
+/*******  f7920f7a-03a7-4c1e-8857-8e622ffe415f  *******/
 const UserSignup = () => {
   // ------------------------------
   // Local signup state
@@ -9,19 +19,32 @@ const UserSignup = () => {
   const [lastName, setlastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [userData, setuserData] = useState({});
+
+  const navigate = useNavigate();
 
   // ------------------------------
   // Handle signup submit
   // ------------------------------
-  const submitHandler = (e) => {
+  const { user, setUser } = useContext(UserDataContext);
+  const submitHandler = async (e) => {
     e.preventDefault();
-    setuserData({
-      fullName: { firstName, lastName },
+    const newUser = {
+      fullname: { firstname: firstName, lastname: lastName },
       email,
       password,
-    });
-    console.log(userData);
+    };
+
+    const response = await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/users/register`,
+      newUser
+    );
+
+    if (response.status === 201) {
+      const data = response.data;
+      setUser(data.user);
+      localStorage.setItem("token", data.token);
+      navigate("/home");
+    }
 
     // Reset fields (UX clean-up)
     setfirstName("");
@@ -147,7 +170,7 @@ const UserSignup = () => {
                   className="relative z-10 transition-colors duration-300 
                                  group-hover:text-black tracking-[0.25em] uppercase"
                 >
-                  Sign Up
+                  Create Account
                 </span>
               </button>
             </form>

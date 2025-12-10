@@ -3,15 +3,12 @@ import { UserDataContext } from "./UserContext";
 
 const UserContextProvider = ({ children }) => {
   const [user, setUser] = useState({
-    fullName: {
-      firstName: "",
-      lastName: "",
-    },
+    fullName: { firstName: "", lastName: "" },
     email: "",
   });
 
   return (
-    <UserDataContext.Provider value={[user, setUser]}>
+    <UserDataContext.Provider value={{ user, setUser }}>
       {children}
     </UserDataContext.Provider>
   );

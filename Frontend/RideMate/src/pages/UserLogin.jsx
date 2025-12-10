@@ -1,21 +1,44 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { UserDataContext } from "../context/UserContext";
+import { useContext } from "react";
 
+/*************  ✨ Windsurf Command ⭐  *************/
+/**
+ * UserLogin is a React component for logging in to the RideMate app.
+ * It provides a form with email and password fields and submits the form to the backend API.
+ * If the submission is successful, it stores the user data and token in local storage and navigates to the home page.
+ */
+/*******  d98919cf-66de-47c9-b8b3-36fddb66996e  *******/
 const UserLogin = () => {
   // ------------------------------
   // Local state for login form
   // ------------------------------
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [userData, setuserData] = useState({});
+  const navigate = useNavigate();
+
+  const { user, setUser } = useContext(UserDataContext);
 
   // ------------------------------
   // Handle login submit
   // ------------------------------
-  const submitHandler = (e) => {
+  const submitHandler = async (e) => {
     e.preventDefault();
-    setuserData({ email: email, password: password });
-    console.log(userData);
+    const userData = { email: email, password: password };
+    const response = await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/users/login`,
+      userData
+    );
+
+    if (response.status === 200) {
+      const data = response.data;
+      setUser(data.user);
+      localStorage.setItem("token", data.token);
+      navigate("/home");
+    }
+
     setEmail("");
     setPassword("");
   };
