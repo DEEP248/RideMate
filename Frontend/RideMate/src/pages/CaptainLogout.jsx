@@ -2,20 +2,20 @@ import React, { useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const UserLogout = () => {
+const CaptainLogout = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
     // Get token safely
     const token = localStorage.getItem("token");
     if (!token) {
-      navigate("/login");
+      navigate("/captain-login");
       return;
     }
 
-    // Hit logout API ONCE (silent, no console errors)
+    // Hit logout API ONCE (no repeated re-renders)
     axios
-      .get(`${import.meta.env.VITE_BASE_URL}/users/logout`, {
+      .get(`${import.meta.env.VITE_BASE_URL}/captains/logout`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -23,17 +23,17 @@ const UserLogout = () => {
       .then((response) => {
         if (response.status === 200) {
           localStorage.removeItem("token");
-          navigate("/login");
+          navigate("/captain-login");
         }
       })
       .catch(() => {
         // Even if token is invalid → clean logout anyway
         localStorage.removeItem("token");
-        navigate("/login");
+        navigate("/captain-login");
       });
   }, []);
 
-  return <div>Logging you out...</div>;
+  return <div>CaptainLogout</div>;
 };
 
-export default UserLogout;
+export default CaptainLogout;

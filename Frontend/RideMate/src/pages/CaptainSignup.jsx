@@ -1,43 +1,76 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { CaptainDataContext } from "../context/CaptainContext";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const CaptainSignup = () => {
-  // ------------------------------
-  // Local signup state
-  // ------------------------------
+  // ----------------------------------------------------
+  // Local state for captain registration input fields
+  // ----------------------------------------------------
   const [firstName, setfirstName] = useState("");
   const [lastName, setlastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [captainData, setCaptainData] = useState({});
 
-  // ------------------------------
-  // Handle signup submit
-  // ------------------------------
-  const submitHandler = (e) => {
+  // Vehicle-related fields
+  const [vehicleColor, setVehicleColor] = useState("");
+  const [vehiclePlate, setVehiclePlate] = useState("");
+  const [vehicleCapacity, setVehicleCapacity] = useState("");
+  const [vehicleType, setVehicleType] = useState("");
+
+  const navigate = useNavigate();
+  const { captain, setCaptain } = React.useContext(CaptainDataContext);
+
+  // ----------------------------------------------------
+  // Submit handler: Register captain → Save user → Redirect
+  // ----------------------------------------------------
+  const submitHandler = async (e) => {
     e.preventDefault();
-    setCaptainData({
+
+    const captainData = {
       fullname: { firstname: firstName, lastname: lastName },
       email,
       password,
-    });
+      vehicle: {
+        color: vehicleColor,
+        plate: vehiclePlate,
+        capacity: vehicleCapacity,
+        vehicleType: vehicleType
+      },
+    };
 
-    console.log(captainData);
+    const response = await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/captains/register`,
+      captainData
+    );
 
-    // Reset form
+    if (response.status === 201) {
+      const data = response.data;
+      setCaptain(data.captain);
+      localStorage.setItem("token", data.token);
+      navigate("/captain-home");
+    }
+
+    // Reset all fields after submit
     setfirstName("");
     setlastName("");
     setEmail("");
     setPassword("");
+    setVehicleColor("");
+    setVehiclePlate("");
+    setVehicleCapacity("");
+    setVehicleType("");
   };
 
   return (
-    // Same full-screen UX shell as all RideMate auth screens
+    // Global shell for mobile-size screen (same across RideMate)
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-100">
-      {/* Phone-size card */}
       <div className="relative w-full max-w-sm min-h-screen bg-white flex flex-col px-5 pb-6 pt-20">
 
-        {/* Header (shared UI system) */}
+        {/* ----------------------------------------------------
+            Header: Brand identity (consistent across all pages)
+           ---------------------------------------------------- */}
         <div className="absolute top-4 left-0 right-0 z-10 flex items-center justify-between px-5">
           <div className="flex items-center gap-3">
             <img
@@ -53,33 +86,38 @@ const CaptainSignup = () => {
           </span>
         </div>
 
-        {/* Main content area */}
-        <div className="flex-1 flex flex-col justify-between mt-4">
+        {/* ----------------------------------------------------
+            Main content: Form + Footer 
+            Reduced spacing to avoid scrollbar on mobile
+           ---------------------------------------------------- */}
+        <div className="flex-1 flex flex-col justify-between mt-2">
 
-          {/* Form block */}
+          {/* ------------------ Form Block ------------------ */}
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-1">
               Become a RideMate Captain
             </h2>
-            <p className="text-xs text-gray-500 italic mb-6">
-              Create your captain account and start offering seats on your daily office route.
+
+            <p className="text-xs text-gray-500 italic mb-4">
+              Create your account and start offering seats on your daily route.
             </p>
 
-            <form className="space-y-5" onSubmit={submitHandler}>
-              
-              {/* Name fields */}
+            {/* Form container - compact spacing */}
+            <form className="space-y-4" onSubmit={submitHandler}>
+
+              {/* ------------------ Name Fields ------------------ */}
               <div>
                 <h3 className="text-sm font-semibold mb-1">Your name</h3>
 
-                <div className="flex gap-4 mb-5">
+                <div className="flex gap-3 mb-3">
                   <input
                     value={firstName}
                     onChange={(e) => setfirstName(e.target.value)}
                     type="text"
                     required
                     placeholder="First name"
-                    className="w-1/2 rounded-xl border border-gray-300 bg-[#f5f5f5] px-4 py-2.5 text-sm 
-                               outline-none placeholder:text-gray-400
+                    className="w-1/2 rounded-xl border border-gray-300 bg-[#f5f5f5] 
+                               px-4 py-2 text-sm outline-none placeholder:text-gray-400
                                focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
                   />
 
@@ -89,14 +127,14 @@ const CaptainSignup = () => {
                     type="text"
                     required
                     placeholder="Last name"
-                    className="w-1/2 rounded-xl border border-gray-300 bg-[#f5f5f5] px-4 py-2.5 text-sm 
-                               outline-none placeholder:text-gray-400
+                    className="w-1/2 rounded-xl border border-gray-300 bg-[#f5f5f5] 
+                               px-4 py-2 text-sm outline-none placeholder:text-gray-400
                                focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
                   />
                 </div>
               </div>
 
-              {/* Email field */}
+              {/* ------------------ Email Field ------------------ */}
               <div>
                 <h3 className="text-sm font-semibold mb-1">Your email</h3>
                 <input
@@ -105,13 +143,13 @@ const CaptainSignup = () => {
                   type="email"
                   required
                   placeholder="captain@example.com"
-                  className="w-full rounded-xl border border-gray-300 bg-[#f5f5f5] px-4 py-2.5 
+                  className="w-full rounded-xl border border-gray-300 bg-[#f5f5f5] px-4 py-2 
                              text-sm outline-none placeholder:text-gray-400
                              focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
                 />
               </div>
 
-              {/* Password field */}
+              {/* ------------------ Password Field ------------------ */}
               <div>
                 <h3 className="text-sm font-semibold mb-1">Create password</h3>
                 <input
@@ -120,20 +158,80 @@ const CaptainSignup = () => {
                   type="password"
                   required
                   placeholder="••••••••"
-                  className="w-full rounded-xl border border-gray-300 bg-[#f5f5f5] px-4 py-2.5 
+                  className="w-full rounded-xl border border-gray-300 bg-[#f5f5f5] px-4 py-2 
                              text-sm outline-none placeholder:text-gray-400
                              focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
                 />
               </div>
 
-              {/* Primary CTA – same RideMate animated button */}
+              {/* ----------------------------------------------------
+                  Vehicle Information Section
+                  Fully aligned + compact spacing
+                 ---------------------------------------------------- */}
+              <h3 className="text-sm font-semibold mb-1">Vehicle Information</h3>
+
+              {/* Row 1: Color + Plate */}
+              <div className="flex gap-3 mb-3">
+                <input
+                  required
+                  type="text"
+                  placeholder="Vehicle color"
+                  value={vehicleColor}
+                  onChange={(e) => setVehicleColor(e.target.value)}
+                  className="w-1/2 rounded-xl border border-gray-300 bg-[#f5f5f5] 
+                             px-4 py-2 text-sm outline-none placeholder:text-gray-400
+                             focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
+                />
+
+                <input
+                  required
+                  type="text"
+                  placeholder="Vehicle plate"
+                  value={vehiclePlate}
+                  onChange={(e) => setVehiclePlate(e.target.value)}
+                  className="w-1/2 rounded-xl border border-gray-300 bg-[#f5f5f5] 
+                             px-4 py-2 text-sm outline-none placeholder:text-gray-400
+                             focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
+                />
+              </div>
+
+              {/* Row 2: Capacity + Type */}
+              <div className="flex gap-3 mb-4">
+                <input
+                  required
+                  type="number"
+                  placeholder="Capacity"
+                  value={vehicleCapacity}
+                  onChange={(e) => setVehicleCapacity(e.target.value)}
+                  className="w-1/2 rounded-xl border border-gray-300 bg-[#f5f5f5] 
+                             px-4 py-2 text-sm outline-none placeholder:text-gray-400
+                             focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
+                />
+
+                <select
+                  required
+                  value={vehicleType}
+                  onChange={(e) => setVehicleType(e.target.value)}
+                  className="w-1/2 rounded-xl border border-gray-300 bg-[#f5f5f5]
+                             px-4 py-2 text-sm outline-none text-gray-700
+                             focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
+                >
+                  <option value="" disabled>
+                    Vehicle type
+                  </option>
+                  <option value="car">Car</option>
+                  <option value="auto">Auto</option>
+                  <option value="moto">Motorcycle</option>
+                </select>
+              </div>
+
+              {/* Primary CTA – Animated Black/Yellow Button */}
               <button
                 type="submit"
-                className="group relative mt-2 flex items-center justify-center w-full 
+                className="group relative flex items-center justify-center w-full 
                            bg-black text-white py-3 rounded-xl text-sm font-semibold 
                            overflow-hidden shadow-md cursor-pointer"
               >
-                {/* Animated layers */}
                 <span
                   className="absolute top-0 left-0 h-1/2 w-0 bg-yellow-400 
                              transition-all duration-300 ease-[cubic-bezier(.785,.135,.15,.86)]
@@ -153,23 +251,26 @@ const CaptainSignup = () => {
               </button>
             </form>
 
-            {/* Switch to Captain login */}
-            <p className="mt-4 text-center text-xs text-gray-600">
+            {/* Switch to login */}
+            <p className="mt-3 text-center text-xs text-gray-600">
               Already a captain?{" "}
-              <Link to="/captain-login" className="font-semibold text-gray-900 underline">
+              <Link
+                to="/captain-login"
+                className="font-semibold text-gray-900 underline"
+              >
                 Login Here
               </Link>
             </p>
           </div>
 
-          {/* Footer */}
-          <p className="text-[10px] leading-tight text-gray-500 mt-4 text-center">
+          {/* ------------------ Footer ------------------ */}
+          <p className="text-[10px] leading-tight text-gray-500 mt-3 text-center">
             This site is protected by reCAPTCHA and the{" "}
             <span className="underline">Google Privacy Policy</span> and{" "}
             <span className="underline">Terms of Service</span> apply.
           </p>
 
-          <p className="text-[10px] mt-2 text-gray-400 text-center">
+          <p className="text-[10px] mt-1 text-gray-400 text-center">
             © {new Date().getFullYear()} RideMate · Built by Deep Darji
           </p>
         </div>

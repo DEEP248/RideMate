@@ -1,21 +1,46 @@
-import React, { useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
+import { UserDataContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
-/**
- * A higher-order component that wraps its children in a protected route.
- * If there is no token stored in local storage, it will redirect to the login page.
- * @param {ReactNode} children - The children of the component.
- * @returns {ReactNode} - The protected route with the children wrapped inside it.
- */
 const UserProtectedWrapper = ({ children }) => {
-  const token = localStorage.getItem("token");
   const navigate = useNavigate();
+  const { setUser } = useContext(UserDataContext);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    // If token missing → no API call → clean redirect
     if (!token) {
       navigate("/login");
+      return;
     }
-  },[token]);
+
+    const verifyUser = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/users/profile`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        // Valid token → set user & continue
+        setUser(response.data);
+      } catch (error) {
+        // Block 401 logs
+        localStorage.removeItem("token");
+        navigate("/login");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    verifyUser();
+  }, []); // <-- Must be empty to avoid double API calls
+
+  if (isLoading) return <div>Loading...</div>;
 
   return <>{children}</>;
 };
