@@ -13,9 +13,21 @@ import CaptainContextProvider from "./context/CaptainContextProvider.jsx";
 import CaptainHome from "./pages/CaptainHome.jsx";
 import CaptainProtectWrapper from "./pages/CaptainProtectedWrapper.jsx";
 import CaptainLogout from "./pages/CaptainLogout.jsx";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 const App = () => {
   return (
-    <div>
+    <>
+      <ToastContainer
+        position="top-center"
+        theme="colored"
+        autoClose={1800}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover={false}
+        draggable
+      />
       <CaptainContextProvider>
         <UserContextProvider>
           <Routes>
@@ -59,7 +71,7 @@ const App = () => {
           </Routes>
         </UserContextProvider>
       </CaptainContextProvider>
-    </div>
+    </>
   );
 };
 

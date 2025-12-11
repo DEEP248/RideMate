@@ -1,52 +1,134 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { UserDataContext } from "../context/UserContext";
-import { useContext } from "react";
+import { toast } from "react-toastify"; // ✅ ADD THIS
 
-/**
- * UserLogin is a React component for logging in to the RideMate app.
- * It provides a form with email and password fields and submits the form to the backend API.
- * If the submission is successful, it stores the user data and token in local storage and navigates to the home page.
- */
 const UserLogin = () => {
-  // ------------------------------
-  // Local state for login form
-  // ------------------------------
+  // -----------------------------------------
+  // Form States
+  // -----------------------------------------
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Refs for auto-focus
+  const emailRef = useRef(null);
+  const passRef = useRef(null);
+
   const navigate = useNavigate();
+  const { setUser } = useContext(UserDataContext);
 
-  const { user, setUser } = useContext(UserDataContext);
+  // -----------------------------------------
+  // Client-side validation
+  // -----------------------------------------
+  const validateForm = () => {
+    const newErrors = {};
 
-  // ------------------------------
-  // Handle login submit
-  // ------------------------------
+    if (!email.trim()) newErrors.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(email))
+      newErrors.email = "Enter a valid email";
+
+    if (!password.trim()) newErrors.password = "Password is required";
+    else if (password.length < 6)
+      newErrors.password = "Password must be at least 6 characters";
+
+    setErrors(newErrors);
+
+    // Auto-focus first invalid field
+    if (newErrors.email) emailRef.current?.focus();
+    else if (newErrors.password) passRef.current?.focus();
+
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // -----------------------------------------
+  // Submit Handler
+  // -----------------------------------------
   const submitHandler = async (e) => {
     e.preventDefault();
-    const userData = { email: email, password: password };
-    const response = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/users/login`,
-      userData
-    );
 
-    if (response.status === 200) {
-      const data = response.data;
-      setUser(data.user);
-      localStorage.setItem("token", data.token);
-      navigate("/home");
+    // Local validation
+    if (!validateForm()) {
+      toast.error("⚠️ Invalid input detected. Please review and retry.", {
+        autoClose: 1000,
+      });
+      return;
     }
 
-    setEmail("");
-    setPassword("");
+    setLoading(true);
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/users/login`,
+        { email, password },
+        {
+          validateStatus: () => true, // Prevents axios console noise
+        }
+      );
+
+      // SUCCESS → 200 LOGIN OK
+      if (response.status === 200) {
+        const data = response.data;
+
+        setUser(data.user);
+        localStorage.setItem("token", data.token);
+
+        toast.success("🚀 Login successful.", {
+          autoClose: 1000,
+        });
+
+        navigate("/home");
+        return;
+      }
+
+      // BACKEND VALIDATION ERRORS → array
+      if (response.data?.errors) {
+        const apiErrors = {};
+
+        response.data.errors.forEach((err) => {
+          apiErrors[err.path] = err.msg;
+        });
+
+        setErrors(apiErrors);
+
+        toast.error("⚠️ Invalid input detected. Please review and retry.", {
+          autoClose: 1000,
+        });
+
+        return;
+      }
+
+      // SIMPLE MESSAGE (invalid credentials)
+      if (response.data?.message) {
+        setErrors({ general: response.data.message });
+
+        toast.error(`🔐 ${response.data.message}`, {
+          autoClose: 1000,
+        });
+
+        return;
+      }
+
+      // FALLBACK
+      toast.error("⚠️ Unexpected system error. Please try again.", {
+        autoClose: 1000,
+      });
+    } catch (err) {
+      toast.error("🌐 Network issue detected. Please retry.", {
+        autoClose: 1000,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    // Full-screen centered app shell (same pattern as Home)
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-100">
-      {/* Phone-size card */}
       <div className="relative w-full max-w-sm min-h-screen bg-white flex flex-col px-5 pb-6 pt-20">
-        {/* Header: Logo + tag (matches Home) */}
+        {/* Header */}
         <div className="absolute top-4 left-0 right-0 z-10 flex items-center justify-between px-5">
           <div className="flex items-center gap-3">
             <img
@@ -62,9 +144,7 @@ const UserLogin = () => {
           </span>
         </div>
 
-        {/* Main content block */}
         <div className="flex-1 flex flex-col justify-between mt-4">
-          {/* Login form */}
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-1">
               Login to RideMate
@@ -73,74 +153,81 @@ const UserLogin = () => {
               Use your registered email to continue your daily office ride.
             </p>
 
-            <form
-              className="space-y-5"
-              onSubmit={(e) => {
-                submitHandler(e);
-              }}
-            >
-              {/* Email field */}
+            {errors.general && (
+              <p className="text-red-600 text-xs mb-2">{errors.general}</p>
+            )}
+
+            <form className="space-y-5" onSubmit={submitHandler}>
+              {/* Email */}
               <div>
                 <h3 className="text-sm font-semibold mb-1">
-                  What&apos;s your email?
+                  What's your email?
                 </h3>
                 <input
+                  ref={emailRef}
                   value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                  }}
+                  onChange={(e) => setEmail(e.target.value)}
                   type="email"
-                  required
-                  className="w-full rounded-xl border border-gray-300 bg-[#f5f5f5] px-4 py-2.5 text-sm outline-none
-                             placeholder:text-gray-400
-                             focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
+                  className={`w-full rounded-xl border px-4 py-2.5 text-sm outline-none bg-[#f5f5f5]
+                  ${errors.email ? "border-red-500" : "border-gray-300"}
+                  focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200`}
                   placeholder="you@example.com"
                 />
+                {errors.email && (
+                  <p className="text-red-500 text-xs">{errors.email}</p>
+                )}
               </div>
 
-              {/* Password field */}
+              {/* Password */}
               <div>
                 <h3 className="text-sm font-semibold mb-1">Enter password</h3>
-                <input
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                  }}
-                  required
-                  type="password"
-                  className="w-full rounded-xl border border-gray-300 bg-[#f5f5f5] px-4 py-2.5 text-sm outline-none
-                             placeholder:text-gray-400
-                             focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
-                  placeholder="••••••••"
-                />
+
+                <div className="relative">
+                  <input
+                    ref={passRef}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    type={showPassword ? "text" : "password"}
+                    className={`w-full rounded-xl border px-4 py-2.5 text-sm outline-none bg-[#f5f5f5]
+                    ${errors.password ? "border-red-500" : "border-gray-300"}
+                    focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200`}
+                    placeholder="••••••••"
+                  />
+
+                  {/* Show/Hide Toggle */}
+                  <span
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-2 text-xs font-semibold text-gray-700 cursor-pointer"
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </span>
+                </div>
+
+                {errors.password && (
+                  <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+                )}
               </div>
 
-              {/* Primary CTA – reusing animated button pattern from Home */}
+              {/* Submit Button */}
               <button
                 type="submit"
-                className="group relative mt-2 flex items-center justify-center w-full 
-                           bg-black text-white py-3 rounded-xl text-sm font-semibold 
-                           overflow-hidden shadow-md cursor-pointer"
+                disabled={loading}
+                className={`group relative mt-2 flex items-center justify-center w-full
+                py-3 rounded-xl text-sm font-semibold overflow-hidden shadow-md
+                ${loading ? "bg-gray-300 text-gray-600" : "bg-black text-white"}
+                cursor-pointer`}
               >
-                {/* Animated yellow layers */}
-                <span
-                  className="absolute top-0 left-0 h-1/2 w-0 bg-yellow-400 transition-all duration-300 ease-[cubic-bezier(.785,.135,.15,.86)]
-                             group-hover:w-full"
-                ></span>
+                {/* Shimmer effect */}
+                {loading && (
+                  <span className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse"></span>
+                )}
 
-                <span
-                  className="absolute bottom-0 right-0 h-1/2 w-0 bg-yellow-400 transition-all duration-300 ease-[cubic-bezier(.785,.135,.15,.86)]
-                             group-hover:w-full"
-                ></span>
-
-                {/* Button label */}
-                <span className="relative z-10 transition-colors duration-300 group-hover:text-black tracking-[0.25em] uppercase">
-                  Login
+                <span className="relative z-10 tracking-[0.25em] uppercase">
+                  {loading ? "Please wait..." : "Login"}
                 </span>
               </button>
             </form>
 
-            {/* Signup link */}
             <p className="mt-4 text-center text-xs text-gray-600">
               New here?{" "}
               <Link
@@ -152,16 +239,13 @@ const UserLogin = () => {
             </p>
           </div>
 
-          {/* Switch to Captain login */}
           <div className="mt-6">
             <Link
               to="/captain-login"
               className="w-full py-2.5 rounded-xl text-sm font-semibold 
-             border border-gray-300
-             flex items-center justify-center
-             text-black bg-yellow-400
-             transition-all duration-200 ease-out
-             hover:bg-black hover:text-yellow-400 hover:border-black hover:shadow-md"
+              border border-gray-300 flex items-center justify-center
+              text-black bg-yellow-400 hover:bg-black hover:text-yellow-400 
+              transition-all duration-200"
             >
               Sign in as Captain
             </Link>

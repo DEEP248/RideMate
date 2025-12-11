@@ -1,76 +1,201 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { CaptainDataContext } from "../context/CaptainContext";
+import React, { useState, useRef, useContext } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { CaptainDataContext } from "../context/CaptainContext";
+import { toast } from "react-toastify"; // ✅ ADD THIS
 
 const CaptainSignup = () => {
-  // ----------------------------------------------------
-  // Local state for captain registration input fields
-  // ----------------------------------------------------
+  // ------------------------------
+  // Local state
+  // ------------------------------
   const [firstName, setfirstName] = useState("");
   const [lastName, setlastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // Vehicle-related fields
+  // Vehicle
   const [vehicleColor, setVehicleColor] = useState("");
   const [vehiclePlate, setVehiclePlate] = useState("");
   const [vehicleCapacity, setVehicleCapacity] = useState("");
   const [vehicleType, setVehicleType] = useState("");
 
-  const navigate = useNavigate();
-  const { captain, setCaptain } = React.useContext(CaptainDataContext);
+  // UI/UX state
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  // ----------------------------------------------------
-  // Submit handler: Register captain → Save user → Redirect
-  // ----------------------------------------------------
+  // Refs for autofocus
+  const firstRef = useRef(null);
+  const lastRef = useRef(null);
+  const emailRef = useRef(null);
+  const passRef = useRef(null);
+  const colorRef = useRef(null);
+  const plateRef = useRef(null);
+  const capacityRef = useRef(null);
+  const typeRef = useRef(null);
+
+  const navigate = useNavigate();
+  const { setCaptain } = useContext(CaptainDataContext);
+
+  // ------------------------------
+  // Validation Logic
+  // ------------------------------
+  const validateForm = () => {
+    const newErr = {};
+
+    if (!firstName.trim() || firstName.length < 3)
+      newErr.firstName = "First name must be at least 3 characters";
+
+    if (!lastName.trim() || lastName.length < 3)
+      newErr.lastName = "Last name must be at least 3 characters";
+
+    if (!email.trim()) newErr.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(email)) newErr.email = "Enter a valid email";
+
+    if (!password.trim() || password.length < 6)
+      newErr.password = "Password must be at least 6 characters";
+
+    if (!vehicleColor.trim() || vehicleColor.length < 3)
+      newErr.vehicleColor = "Color must be at least 3 characters";
+
+    if (!vehiclePlate.trim() || vehiclePlate.length < 3)
+      newErr.vehiclePlate = "Plate must be at least 3 characters";
+
+    if (!vehicleCapacity || vehicleCapacity < 1)
+      newErr.vehicleCapacity = "Capacity must be at least 1";
+
+    if (!vehicleType) newErr.vehicleType = "Please select a valid vehicle type";
+
+    setErrors(newErr);
+
+    // Auto focus first error
+    if (newErr.firstName) return firstRef.current?.focus();
+    if (newErr.lastName) return lastRef.current?.focus();
+    if (newErr.email) return emailRef.current?.focus();
+    if (newErr.password) return passRef.current?.focus();
+    if (newErr.vehicleColor) return colorRef.current?.focus();
+    if (newErr.vehiclePlate) return plateRef.current?.focus();
+    if (newErr.vehicleCapacity) return capacityRef.current?.focus();
+    if (newErr.vehicleType) return typeRef.current?.focus();
+
+    return Object.keys(newErr).length === 0;
+  };
+
+  // ------------------------------
+  // Submit handler
+  // ------------------------------
   const submitHandler = async (e) => {
     e.preventDefault();
 
-    const captainData = {
-      fullname: { firstname: firstName, lastname: lastName },
-      email,
-      password,
-      vehicle: {
-        color: vehicleColor,
-        plate: vehiclePlate,
-        capacity: vehicleCapacity,
-        vehicleType: vehicleType
-      },
-    };
-
-    const response = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/captains/register`,
-      captainData
-    );
-
-    if (response.status === 201) {
-      const data = response.data;
-      setCaptain(data.captain);
-      localStorage.setItem("token", data.token);
-      navigate("/captain-home");
+    if (!validateForm()) {
+      toast.error("⚠️ Invalid input detected. Please review and retry.", {
+        autoClose: 1000,
+      });
+      return;
     }
 
-    // Reset all fields after submit
-    setfirstName("");
-    setlastName("");
-    setEmail("");
-    setPassword("");
-    setVehicleColor("");
-    setVehiclePlate("");
-    setVehicleCapacity("");
-    setVehicleType("");
+    setLoading(true);
+
+    try {
+      const payload = {
+        fullname: { firstname: firstName, lastname: lastName },
+        email,
+        password,
+        vehicle: {
+          color: vehicleColor,
+          plate: vehiclePlate,
+          capacity: vehicleCapacity,
+          vehicleType,
+        },
+      };
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/captains/register`,
+        payload,
+        {
+          validateStatus: () => true, // clean axios behavior
+        }
+      );
+
+      // -----------------------------
+      // SUCCESS — Captain created
+      // -----------------------------
+      if (response.status === 201) {
+        const data = response.data;
+
+        setCaptain(data.captain);
+        localStorage.setItem("token", data.token);
+
+        toast.success("🛞 Captain onboarding completed. Welcome aboard!", {
+          autoClose: 1000,
+        });
+
+        navigate("/captain-home");
+        return;
+      }
+
+      // -----------------------------
+      // BACKEND FIELD VALIDATION
+      // -----------------------------
+      if (response.data?.errors) {
+        const apiErr = {};
+
+        response.data.errors.forEach((err) => {
+          const key = err.path.includes(".")
+            ? err.path.split(".").pop()
+            : err.path;
+          apiErr[key] = err.msg;
+        });
+
+        setErrors(apiErr);
+
+        // Autofocus priority field
+        if (apiErr.firstName) firstRef.current?.focus();
+        else if (apiErr.lastName) lastRef.current?.focus();
+        else if (apiErr.email) emailRef.current?.focus();
+        else if (apiErr.password) passRef.current?.focus();
+        else if (apiErr.vehicleColor) colorRef.current?.focus();
+        else if (apiErr.vehiclePlate) plateRef.current?.focus();
+        else if (apiErr.vehicleCapacity) capacityRef.current?.focus();
+        else if (apiErr.vehicleType) typeRef.current?.focus();
+
+        toast.error("⚠️ Invalid input detected. Please review and retry.", {
+          autoClose: 1000,
+        });
+
+        return;
+      }
+
+      // -----------------------------
+      // GENERAL SERVER MESSAGE
+      // -----------------------------
+      if (response.data?.message) {
+        setErrors({ general: response.data.message });
+
+        toast.error(`🔐 ${response.data.message}`, {
+          autoClose: 1000,
+        });
+
+        return;
+      }
+
+      // Unexpected fallback
+      toast.error("⚠️ Unexpected system error. Please try again.", {
+        autoClose: 1000,
+      });
+    } catch (err) {
+      toast.error("🌐 Network issue detected. Please retry.", {
+        autoClose: 1000,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    // Global shell for mobile-size screen (same across RideMate)
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-100">
       <div className="relative w-full max-w-sm min-h-screen bg-white flex flex-col px-5 pb-6 pt-20">
-
-        {/* ----------------------------------------------------
-            Header: Brand identity (consistent across all pages)
-           ---------------------------------------------------- */}
+        {/* Header */}
         <div className="absolute top-4 left-0 right-0 z-10 flex items-center justify-between px-5">
           <div className="flex items-center gap-3">
             <img
@@ -86,191 +211,216 @@ const CaptainSignup = () => {
           </span>
         </div>
 
-        {/* ----------------------------------------------------
-            Main content: Form + Footer 
-            Reduced spacing to avoid scrollbar on mobile
-           ---------------------------------------------------- */}
+        {/* Main Content */}
         <div className="flex-1 flex flex-col justify-between mt-2">
+          {/* Global error */}
+          {errors.general && (
+            <p className="text-red-600 text-xs mb-2">{errors.general}</p>
+          )}
+          <h2 className="text-2xl font-bold text-gray-900">
+            Become a RideMate Captain
+          </h2>
+          <p className="text-xs text-gray-500 italic mb-2">
+            Create your account and start offering seats on your daily route.
+          </p>
 
-          {/* ------------------ Form Block ------------------ */}
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">
-              Become a RideMate Captain
-            </h2>
+          <form className="space-y-4" onSubmit={submitHandler}>
+            {/* ----------------- NAME ----------------- */}
+            <div>
+              <h3 className="text-sm font-semibold mb-1">Your name</h3>
 
-            <p className="text-xs text-gray-500 italic mb-4">
-              Create your account and start offering seats on your daily route.
-            </p>
-
-            {/* Form container - compact spacing */}
-            <form className="space-y-4" onSubmit={submitHandler}>
-
-              {/* ------------------ Name Fields ------------------ */}
-              <div>
-                <h3 className="text-sm font-semibold mb-1">Your name</h3>
-
-                <div className="flex gap-3 mb-3">
-                  <input
-                    value={firstName}
-                    onChange={(e) => setfirstName(e.target.value)}
-                    type="text"
-                    required
-                    placeholder="First name"
-                    className="w-1/2 rounded-xl border border-gray-300 bg-[#f5f5f5] 
-                               px-4 py-2 text-sm outline-none placeholder:text-gray-400
-                               focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
-                  />
-
-                  <input
-                    value={lastName}
-                    onChange={(e) => setlastName(e.target.value)}
-                    type="text"
-                    required
-                    placeholder="Last name"
-                    className="w-1/2 rounded-xl border border-gray-300 bg-[#f5f5f5] 
-                               px-4 py-2 text-sm outline-none placeholder:text-gray-400
-                               focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
-                  />
-                </div>
-              </div>
-
-              {/* ------------------ Email Field ------------------ */}
-              <div>
-                <h3 className="text-sm font-semibold mb-1">Your email</h3>
-                <input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  type="email"
-                  required
-                  placeholder="captain@example.com"
-                  className="w-full rounded-xl border border-gray-300 bg-[#f5f5f5] px-4 py-2 
-                             text-sm outline-none placeholder:text-gray-400
-                             focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
-                />
-              </div>
-
-              {/* ------------------ Password Field ------------------ */}
-              <div>
-                <h3 className="text-sm font-semibold mb-1">Create password</h3>
-                <input
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  className="w-full rounded-xl border border-gray-300 bg-[#f5f5f5] px-4 py-2 
-                             text-sm outline-none placeholder:text-gray-400
-                             focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
-                />
-              </div>
-
-              {/* ----------------------------------------------------
-                  Vehicle Information Section
-                  Fully aligned + compact spacing
-                 ---------------------------------------------------- */}
-              <h3 className="text-sm font-semibold mb-1">Vehicle Information</h3>
-
-              {/* Row 1: Color + Plate */}
               <div className="flex gap-3 mb-3">
                 <input
-                  required
+                  ref={firstRef}
+                  value={firstName}
+                  onChange={(e) => setfirstName(e.target.value)}
                   type="text"
-                  placeholder="Vehicle color"
-                  value={vehicleColor}
-                  onChange={(e) => setVehicleColor(e.target.value)}
-                  className="w-1/2 rounded-xl border border-gray-300 bg-[#f5f5f5] 
-                             px-4 py-2 text-sm outline-none placeholder:text-gray-400
-                             focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
+                  placeholder="First name"
+                  className={`w-1/2 rounded-xl border px-4 py-2 
+                  ${
+                    errors.firstName ? "border-red-500" : "border-gray-300"
+                  } bg-[#f5f5f5]`}
                 />
-
                 <input
-                  required
+                  ref={lastRef}
+                  value={lastName}
+                  onChange={(e) => setlastName(e.target.value)}
                   type="text"
-                  placeholder="Vehicle plate"
-                  value={vehiclePlate}
-                  onChange={(e) => setVehiclePlate(e.target.value)}
-                  className="w-1/2 rounded-xl border border-gray-300 bg-[#f5f5f5] 
-                             px-4 py-2 text-sm outline-none placeholder:text-gray-400
-                             focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
+                  placeholder="Last name"
+                  className={`w-1/2 rounded-xl border px-4 py-2 
+                  ${
+                    errors.lastName ? "border-red-500" : "border-gray-300"
+                  } bg-[#f5f5f5]`}
                 />
               </div>
 
-              {/* Row 2: Capacity + Type */}
-              <div className="flex gap-3 mb-4">
-                <input
-                  required
-                  type="number"
-                  placeholder="Capacity"
-                  value={vehicleCapacity}
-                  onChange={(e) => setVehicleCapacity(e.target.value)}
-                  className="w-1/2 rounded-xl border border-gray-300 bg-[#f5f5f5] 
-                             px-4 py-2 text-sm outline-none placeholder:text-gray-400
-                             focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
-                />
+              {errors.firstName && (
+                <p className="text-red-500 text-xs">{errors.firstName}</p>
+              )}
+              {errors.lastName && (
+                <p className="text-red-500 text-xs">{errors.lastName}</p>
+              )}
+            </div>
 
-                <select
-                  required
-                  value={vehicleType}
-                  onChange={(e) => setVehicleType(e.target.value)}
-                  className="w-1/2 rounded-xl border border-gray-300 bg-[#f5f5f5]
-                             px-4 py-2 text-sm outline-none text-gray-700
-                             focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
+            {/* ----------------- EMAIL ----------------- */}
+            <div>
+              <h3 className="text-sm font-semibold mb-1">Your email</h3>
+              <input
+                ref={emailRef}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                placeholder="captain@example.com"
+                className={`w-full rounded-xl border px-4 py-2 
+                ${
+                  errors.email ? "border-red-500" : "border-gray-300"
+                } bg-[#f5f5f5]`}
+              />
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+              )}
+            </div>
+
+            {/* ----------------- PASSWORD ----------------- */}
+            <div>
+              <h3 className="text-sm font-semibold mb-1">Create password</h3>
+              <div className="relative">
+                <input
+                  ref={passRef}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className={`w-full rounded-xl border px-4 py-2 
+                  ${
+                    errors.password ? "border-red-500" : "border-gray-300"
+                  } bg-[#f5f5f5]`}
+                />
+                <span
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-2 text-xs font-semibold cursor-pointer text-gray-800"
                 >
-                  <option value="" disabled>
-                    Vehicle type
-                  </option>
-                  <option value="car">Car</option>
-                  <option value="auto">Auto</option>
-                  <option value="moto">Motorcycle</option>
-                </select>
+                  {showPassword ? "Hide" : "Show"}
+                </span>
               </div>
 
-              {/* Primary CTA – Animated Black/Yellow Button */}
-              <button
-                type="submit"
-                className="group relative flex items-center justify-center w-full 
-                           bg-black text-white py-3 rounded-xl text-sm font-semibold 
-                           overflow-hidden shadow-md cursor-pointer"
+              {errors.password && (
+                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+              )}
+            </div>
+
+            {/* ----------------- VEHICLE ----------------- */}
+            <h3 className="text-sm font-semibold mb-1">Vehicle Information</h3>
+
+            {/* Color + Plate */}
+            <div className="flex gap-3 mb-3">
+              <input
+                ref={colorRef}
+                value={vehicleColor}
+                onChange={(e) => setVehicleColor(e.target.value)}
+                type="text"
+                placeholder="Vehicle color"
+                className={`w-1/2 rounded-xl border px-4 py-2 
+                ${
+                  errors.vehicleColor ? "border-red-500" : "border-gray-300"
+                } bg-[#f5f5f5]`}
+              />
+              <input
+                ref={plateRef}
+                value={vehiclePlate}
+                onChange={(e) => setVehiclePlate(e.target.value)}
+                type="text"
+                placeholder="Vehicle plate"
+                className={`w-1/2 rounded-xl border px-4 py-2 
+                ${
+                  errors.vehiclePlate ? "border-red-500" : "border-gray-300"
+                } bg-[#f5f5f5]`}
+              />
+            </div>
+
+            {errors.vehicleColor && (
+              <p className="text-red-500 text-xs">{errors.vehicleColor}</p>
+            )}
+            {errors.vehiclePlate && (
+              <p className="text-red-500 text-xs">{errors.vehiclePlate}</p>
+            )}
+
+            {/* Capacity + Type */}
+            <div className="flex gap-3 mb-4">
+              <input
+                ref={capacityRef}
+                value={vehicleCapacity}
+                onChange={(e) => setVehicleCapacity(e.target.value)}
+                type="number"
+                placeholder="Capacity"
+                className={`w-1/2 rounded-xl border px-4 py-2 
+                ${
+                  errors.vehicleCapacity ? "border-red-500" : "border-gray-300"
+                } bg-[#f5f5f5]`}
+              />
+
+              <select
+                ref={typeRef}
+                value={vehicleType}
+                onChange={(e) => setVehicleType(e.target.value)}
+                className={`w-1/2 rounded-xl border px-4 py-2 text-gray-700 
+                ${
+                  errors.vehicleType ? "border-red-500" : "border-gray-300"
+                } bg-[#f5f5f5]`}
               >
+                <option value="" disabled>
+                  Vehicle type
+                </option>
+                <option value="car">Car</option>
+                <option value="auto">Auto</option>
+                <option value="motorcycle">Motorcycle</option>
+              </select>
+            </div>
+
+            {errors.vehicleCapacity && (
+              <p className="text-red-500 text-xs">{errors.vehicleCapacity}</p>
+            )}
+            {errors.vehicleType && (
+              <p className="text-red-500 text-xs">{errors.vehicleType}</p>
+            )}
+
+            {/* ----------------- SUBMIT BUTTON ----------------- */}
+            <button
+              type="submit"
+              disabled={loading}
+              className={`group relative flex items-center justify-center w-full 
+              py-3 rounded-xl text-sm font-semibold overflow-hidden shadow-md
+              ${loading ? "bg-gray-300 text-gray-500" : "bg-black text-white"}`}
+            >
+              {loading && (
                 <span
-                  className="absolute top-0 left-0 h-1/2 w-0 bg-yellow-400 
-                             transition-all duration-300 ease-[cubic-bezier(.785,.135,.15,.86)]
-                             group-hover:w-full"
+                  className="absolute inset-0 bg-gradient-to-r 
+                from-gray-200 via-gray-300 to-gray-200 animate-pulse"
                 ></span>
+              )}
 
-                <span
-                  className="absolute bottom-0 right-0 h-1/2 w-0 bg-yellow-400 
-                             transition-all duration-300 ease-[cubic-bezier(.785,.135,.15,.86)]
-                             group-hover:w-full"
-                ></span>
+              <span className="relative z-10 tracking-[0.25em] uppercase">
+                {loading ? "Processing..." : "Create Account"}
+              </span>
+            </button>
+          </form>
 
-                <span className="relative z-10 transition-colors duration-300 
-                                 group-hover:text-black tracking-[0.25em] uppercase">
-                  Create Account
-                </span>
-              </button>
-            </form>
+          {/* Footer */}
+          <p className="text-center text-xs mt-3">
+            Already a captain?{" "}
+            <Link to="/captain-login" className="underline font-semibold">
+              Login Here
+            </Link>
+          </p>
 
-            {/* Switch to login */}
-            <p className="mt-3 text-center text-xs text-gray-600">
-              Already a captain?{" "}
-              <Link
-                to="/captain-login"
-                className="font-semibold text-gray-900 underline"
-              >
-                Login Here
-              </Link>
-            </p>
-          </div>
-
-          {/* ------------------ Footer ------------------ */}
-          <p className="text-[10px] leading-tight text-gray-500 mt-3 text-center">
+          {/* Footer */}
+          <p className="text-[10px] leading-tight text-gray-500 mt-4 text-center">
             This site is protected by reCAPTCHA and the{" "}
             <span className="underline">Google Privacy Policy</span> and{" "}
             <span className="underline">Terms of Service</span> apply.
           </p>
 
-          <p className="text-[10px] mt-1 text-gray-400 text-center">
+          <p className="text-[10px] mt-2 text-gray-400 text-center">
             © {new Date().getFullYear()} RideMate · Built by Deep Darji
           </p>
         </div>
