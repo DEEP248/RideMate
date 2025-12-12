@@ -2,19 +2,42 @@ import React, { useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import "remixicon/fonts/remixicon.css";
+
 import LocationSearchPanel from "../components/LocationSearchPanel";
+import VehiclePanel from "../components/VehiclePanel";
+import ConfirmedVehicle from "../components/ConfirmedVehicle";
 
 const HomePage = () => {
+
+  // -------------------------------------------------------------
+  // STATE MANAGEMENT
+  // -------------------------------------------------------------
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
+
+  // Controls "Find a trip" bottom panel
   const [panelOpen, setPanelOpen] = useState(false);
 
+  // Controls Vehicle selection panel
+  const [vehiclePanel, setvehiclePanel] = useState(false);
+
+  // Controls Confirm Ride panel
+  const [confirmvehiclePanel, setConfirmVehiclePanel] = useState(false);
+
+  // -------------------------------------------------------------
+  // REFS USED FOR GSAP ANIMATIONS
+  // -------------------------------------------------------------
   const panelRef = useRef(null);
   const panelCloseRef = useRef(null);
 
+  const vehiclepanelRef = useRef(null);
+  const confirmVehiclepanelRef = useRef(null);
+
   const submitHandler = (e) => e.preventDefault();
 
-  // Animate bottom sheet
+  // -------------------------------------------------------------
+  // GSAP: SEARCH PANEL EXPANSION / COLLAPSE
+  // -------------------------------------------------------------
   useGSAP(() => {
     if (panelOpen) {
       gsap.to(panelRef.current, {
@@ -43,13 +66,34 @@ const HomePage = () => {
     }
   }, [panelOpen]);
 
+  // -------------------------------------------------------------
+  // GSAP: VEHICLE PANEL SLIDE-IN / SLIDE-OUT
+  // -------------------------------------------------------------
+  useGSAP(() => {
+    gsap.to(vehiclepanelRef.current, {
+      transform: vehiclePanel ? "translateY(0)" : "translateY(100%)",
+    });
+  }, [vehiclePanel]);
+
+  // -------------------------------------------------------------
+  // GSAP: CONFIRM VEHICLE PANEL SLIDE-IN / SLIDE-OUT
+  // -------------------------------------------------------------
+  useGSAP(() => {
+    gsap.to(confirmVehiclepanelRef.current, {
+      transform: confirmvehiclePanel ? "translateY(0)" : "translateY(100%)",
+    });
+  }, [confirmvehiclePanel]);
+
+  // -------------------------------------------------------------
+  // RENDER UI
+  // -------------------------------------------------------------
   return (
     <div className="relative w-full max-w-sm min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="relative w-full max-w-sm min-h-screen bg-white flex flex-col overflow-hidden">
-        
-        {/* ------------------------------------------------- */}
-        {/* ORIGINAL HEADER (Your old style preserved)       */}
-        {/* ------------------------------------------------- */}
+
+        {/* ========================================================= */}
+        {/* HEADER — original preserved as requested                  */}
+        {/* ========================================================= */}
         <div className="absolute top-4 left-0 right-0 z-10 flex items-center justify-between px-5">
           <div className="flex items-center gap-3">
             <img
@@ -65,9 +109,9 @@ const HomePage = () => {
           </span>
         </div>
 
-        {/* ------------------------------------------------- */}
-        {/* MAP SECTION                                       */}
-        {/* ------------------------------------------------- */}
+        {/* ========================================================= */}
+        {/* MAP PLACEHOLDER                                           */}
+        {/* ========================================================= */}
         <div className="flex-1 mt-20 rounded-xl overflow-hidden shadow-lg mx-4">
           <img
             className="h-full w-full object-cover"
@@ -76,12 +120,20 @@ const HomePage = () => {
           />
         </div>
 
-        {/* ------------------------------------------------- */}
-        {/* TRIP INPUT (BOTTOM SHEET)                         */}
-        {/* ------------------------------------------------- */}
+        {/* ========================================================= */}
+        {/* FIND TRIP — SEARCH INPUT PANEL                            */}
+        {/* ========================================================= */}
         <div className="absolute bottom-0 left-0 right-0">
           <div className="bg-white rounded-t-3xl px-6 pt-7 pb-6 shadow-2xl border-t relative">
-            {/* Close icon */}
+
+            {/* ------------------------------------------------------ */}
+            {/* SLIDE-DOWN HANDLE (Improved UX — clean rounded bar)    */}
+            {/* ------------------------------------------------------ */}
+            <div
+              className="absolute top-3 left-0 right-0 mx-auto w-12 h-1.5 bg-gray-300 rounded-full"
+            ></div>
+
+            {/* Close button for expanded panel */}
             <button
               ref={panelCloseRef}
               onClick={() => setPanelOpen(false)}
@@ -92,11 +144,9 @@ const HomePage = () => {
 
             <h4 className="text-2xl font-semibold mb-3">Find a trip</h4>
 
-            {/* ------------------------------ */}
-            {/* INPUT FIELDS – CLEAN + NO LINE */}
-            {/* ------------------------------ */}
+            {/* Search Inputs */}
             <form onSubmit={submitHandler}>
-              {/* Pickup */}
+              {/* Pickup Field */}
               <div className="relative mt-2">
                 <i className="ri-map-pin-fill absolute left-3 top-3.5 text-lg text-gray-500"></i>
                 <input
@@ -109,7 +159,7 @@ const HomePage = () => {
                 />
               </div>
 
-              {/* Destination */}
+              {/* Destination Field */}
               <div className="relative mt-3">
                 <i className="ri-flag-fill absolute left-3 top-3.5 text-lg text-gray-500"></i>
                 <input
@@ -124,14 +174,42 @@ const HomePage = () => {
             </form>
           </div>
 
-          {/* EXPANDING PANEL */}
+          {/* EXPANDING SEARCH RESULTS PANEL */}
           <div
             ref={panelRef}
             className="bg-white h-0 overflow-hidden rounded-t-3xl shadow-xl"
-            style={{ overflowY: "auto" }} // ✅ enables vertical scroll inside panel
+            style={{ overflowY: "auto" }}
           >
-            <LocationSearchPanel />
+            <LocationSearchPanel
+              vehiclePanel={vehiclePanel}
+              setvehiclePanel={setvehiclePanel}
+              setPanelOpen={setPanelOpen}
+              panelOpen={panelOpen}
+            />
           </div>
+        </div>
+
+        {/* ========================================================= */}
+        {/* VEHICLE SELECTION PANEL                                   */}
+        {/* ========================================================= */}
+        <div
+          ref={vehiclepanelRef}
+          className="fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 py-10 pt-14"
+        >
+          <VehiclePanel
+            setvehiclePanel={setvehiclePanel}
+            setConfirmVehiclePanel={setConfirmVehiclePanel}
+          />
+        </div>
+
+        {/* ========================================================= */}
+        {/* CONFIRM VEHICLE PANEL                                     */}
+        {/* ========================================================= */}
+        <div
+          ref={confirmVehiclepanelRef}
+          className="fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 py-10 pt-14"
+        >
+          <ConfirmedVehicle />
         </div>
       </div>
     </div>
