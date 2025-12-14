@@ -26,7 +26,7 @@ const WaitingForDriver = (props) => {
         className="w-full flex justify-center mb-5 cursor-pointer"
         onClick={() => props.setWaitingForDriverPanel(false)}
       >
-        <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+        <i className="ri-arrow-down-wide-line text-2xl text-gray-400"></i>
       </div>
 
       {/* ------------------------------------------------------ */}

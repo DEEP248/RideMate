@@ -16,6 +16,7 @@ import CaptainLogout from "./pages/CaptainLogout.jsx";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Riding from "./pages/Riding.jsx";
+import CaptainRiding from "./pages/CaptainRiding.jsx";
 
 const App = () => {
   return (
@@ -38,6 +39,7 @@ const App = () => {
             <Route path="/signup" element={<UserSignup />} />
             <Route path="/captain-login" element={<CaptainLogin />} />
             <Route path="/captain-signup" element={<CaptainSignup />} />
+            <Route path="/captain-riding" element={<CaptainRiding />} />
             <Route
               path="/home"
               element={

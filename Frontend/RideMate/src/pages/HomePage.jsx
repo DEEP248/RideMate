@@ -8,6 +8,7 @@ import VehiclePanel from "../components/VehiclePanel";
 import ConfirmedVehicle from "../components/ConfirmedVehicle";
 import LookingForDriver from "../components/LookingForDriver";
 import WaitingForDriver from "../components/WaitingForDriver";
+import { Link } from "react-router-dom";
 
 const HomePage = () => {
   // -------------------------------------------------------------
@@ -130,7 +131,15 @@ const HomePage = () => {
             />
             <h1 className="text-base font-bold text-gray-900">RideMate</h1>
           </div>
-
+          <Link
+            to="/login"
+            className="
+            h-10 w-10 rounded-full bg-white
+            shadow-md flex items-center justify-center
+          "
+          >
+            <i className="ri-logout-box-r-line text-lg"></i>
+          </Link>
           <span className="text-[11px] font-semibold bg-yellow-400 text-black px-3 py-1 rounded-full shadow-md">
             User Mode
           </span>
@@ -243,7 +252,10 @@ const HomePage = () => {
   overflow-hidden
 "
         >
-          <ConfirmedVehicle setConfirmVehiclePanel={setConfirmVehiclePanel} setLookingForDriverPanel={setLookingForDriverPanel} />
+          <ConfirmedVehicle
+            setConfirmVehiclePanel={setConfirmVehiclePanel}
+            setLookingForDriverPanel={setLookingForDriverPanel}
+          />
         </div>
 
         <div
@@ -255,7 +267,9 @@ const HomePage = () => {
   overflow-hidden
 "
         >
-          <LookingForDriver setLookingForDriverPanel={setLookingForDriverPanel} />
+          <LookingForDriver
+            setLookingForDriverPanel={setLookingForDriverPanel}
+          />
         </div>
 
         <div
@@ -267,10 +281,10 @@ const HomePage = () => {
   overflow-hidden
 "
         >
-          <WaitingForDriver setWaitingForDriverPanel={setWaitingForDriverPanel} />
+          <WaitingForDriver
+            setWaitingForDriverPanel={setWaitingForDriverPanel}
+          />
         </div>
-
-
       </div>
     </div>
   );
