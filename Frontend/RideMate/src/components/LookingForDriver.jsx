@@ -1,6 +1,6 @@
 import React from "react";
 
-const ConfirmedVehicle = (props) => {
+const LookingForDriver = (props) => {
   return (
     <div className="relative pb-6 px-2">
       {/* -------------------------------- */}
@@ -8,7 +8,7 @@ const ConfirmedVehicle = (props) => {
       {/* -------------------------------- */}
       <div
         className="w-full flex justify-center mb-5 cursor-pointer"
-        onClick={() => props.setConfirmVehiclePanel(false)}
+        onClick={() => props.setLookingForDriverPanel(false)}
       >
         <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
       </div>
@@ -16,7 +16,7 @@ const ConfirmedVehicle = (props) => {
       {/* -------------------------------- */}
       {/* Title                             */}
       {/* -------------------------------- */}
-      <h3 className="text-xl font-semibold mb-6 px-2">Confirm your ride</h3>
+      <h3 className="text-xl font-semibold mb-6 px-2">Looking For Driver</h3>
 
       {/* -------------------------------- */}
       {/* Vehicle Preview                   */}
@@ -66,28 +66,8 @@ const ConfirmedVehicle = (props) => {
           </div>
         </div>
       </div>
-
-      {/* -------------------------------- */}
-      {/* Confirm CTA                      */}
-      {/* -------------------------------- */}
-      <button
-        onClick={()=>{
-          props.setConfirmVehiclePanel(true);
-          props.setLookingForDriverPanel(true);
-        }}
-        className="
-    w-full mt-6 py-3 rounded-xl cursor-pointer
-    font-semibold text-sm
-    bg-black text-white
-    hover:bg-yellow-500 hover:text-black
-    active:scale-[0.98]
-    transition-all
-  "
-      >
-        Confirm ride
-      </button>
     </div>
   );
 };
 
-export default ConfirmedVehicle;
+export default LookingForDriver;

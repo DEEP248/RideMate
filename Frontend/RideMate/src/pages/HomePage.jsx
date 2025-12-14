@@ -6,9 +6,10 @@ import "remixicon/fonts/remixicon.css";
 import LocationSearchPanel from "../components/LocationSearchPanel";
 import VehiclePanel from "../components/VehiclePanel";
 import ConfirmedVehicle from "../components/ConfirmedVehicle";
+import LookingForDriver from "../components/LookingForDriver";
+import WaitingForDriver from "../components/WaitingForDriver";
 
 const HomePage = () => {
-
   // -------------------------------------------------------------
   // STATE MANAGEMENT
   // -------------------------------------------------------------
@@ -24,6 +25,12 @@ const HomePage = () => {
   // Controls Confirm Ride panel
   const [confirmvehiclePanel, setConfirmVehiclePanel] = useState(false);
 
+  // Controls "Looking for a driver" bottom panel
+  const [lookingForDriverPanel, setLookingForDriverPanel] = useState(false);
+
+  // Controls "Waiting for a driver" bottom panel
+  const [waitingForDriverPanel, setWaitingForDriverPanel] = useState(false);
+
   // -------------------------------------------------------------
   // REFS USED FOR GSAP ANIMATIONS
   // -------------------------------------------------------------
@@ -32,6 +39,9 @@ const HomePage = () => {
 
   const vehiclepanelRef = useRef(null);
   const confirmVehiclepanelRef = useRef(null);
+
+  const lookingForDriverpanelRef = useRef(null);
+  const waitingForDriverpanelRef = useRef(null);
 
   const submitHandler = (e) => e.preventDefault();
 
@@ -85,12 +95,29 @@ const HomePage = () => {
   }, [confirmvehiclePanel]);
 
   // -------------------------------------------------------------
+  // GSAP: LOOKING FOR DRIVER PANEL SLIDE-IN / SLIDE-OUT
+  // -------------------------------------------------------------
+  useGSAP(() => {
+    gsap.to(lookingForDriverpanelRef.current, {
+      transform: lookingForDriverPanel ? "translateY(0)" : "translateY(100%)",
+    });
+  }, [lookingForDriverPanel]);
+
+  // -------------------------------------------------------------
+  // GSAP: WAITING FOR DRIVER PANEL SLIDE-IN / SLIDE-OUT
+  // -------------------------------------------------------------
+  useGSAP(() => {
+    gsap.to(waitingForDriverpanelRef.current, {
+      transform: waitingForDriverPanel ? "translateY(0)" : "translateY(100%)",
+    });
+  }, [waitingForDriverPanel]);
+
+  // -------------------------------------------------------------
   // RENDER UI
   // -------------------------------------------------------------
   return (
-    <div className="relative w-full max-w-sm min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="relative w-full max-w-sm min-h-screen bg-white flex flex-col overflow-hidden">
-
+    <div className="relative w-full max-w-sm h-screen bg-gray-100 flex items-center justify-center overflow-hidden">
+      <div className="relative w-full max-w-sm h-screen bg-white flex flex-col overflow-hidden">
         {/* ========================================================= */}
         {/* HEADER — original preserved as requested                  */}
         {/* ========================================================= */}
@@ -125,13 +152,10 @@ const HomePage = () => {
         {/* ========================================================= */}
         <div className="absolute bottom-0 left-0 right-0">
           <div className="bg-white rounded-t-3xl px-6 pt-7 pb-6 shadow-2xl border-t relative">
-
             {/* ------------------------------------------------------ */}
             {/* SLIDE-DOWN HANDLE (Improved UX — clean rounded bar)    */}
             {/* ------------------------------------------------------ */}
-            <div
-              className="absolute top-3 left-0 right-0 mx-auto w-12 h-1.5 bg-gray-300 rounded-full"
-            ></div>
+            <div className="absolute top-3 left-0 right-0 mx-auto w-12 h-1.5 bg-gray-300 rounded-full"></div>
 
             {/* Close button for expanded panel */}
             <button
@@ -194,7 +218,12 @@ const HomePage = () => {
         {/* ========================================================= */}
         <div
           ref={vehiclepanelRef}
-          className="fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 py-10 pt-14"
+          className="
+  fixed bottom-0 w-full z-10 bg-white
+  translate-y-full
+  h-[70vh] max-h-[70vh]
+  overflow-hidden
+"
         >
           <VehiclePanel
             setvehiclePanel={setvehiclePanel}
@@ -207,10 +236,41 @@ const HomePage = () => {
         {/* ========================================================= */}
         <div
           ref={confirmVehiclepanelRef}
-          className="fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 py-10 pt-14"
+          className="
+  fixed bottom-0 w-full z-10 bg-white
+  translate-y-full
+  h-[70vh] max-h-[70vh]
+  overflow-hidden
+"
         >
-          <ConfirmedVehicle />
+          <ConfirmedVehicle setConfirmVehiclePanel={setConfirmVehiclePanel} setLookingForDriverPanel={setLookingForDriverPanel} />
         </div>
+
+        <div
+          ref={lookingForDriverpanelRef}
+          className="
+  fixed bottom-0 w-full z-10 bg-white
+  translate-y-full
+  h-[70vh] max-h-[70vh]
+  overflow-hidden
+"
+        >
+          <LookingForDriver setLookingForDriverPanel={setLookingForDriverPanel} />
+        </div>
+
+        <div
+          ref={waitingForDriverpanelRef}
+          className="
+  fixed bottom-0 w-full z-10 bg-white
+  translate-y-full
+  h-[70vh] max-h-[70vh]
+  overflow-hidden
+"
+        >
+          <WaitingForDriver setWaitingForDriverPanel={setWaitingForDriverPanel} />
+        </div>
+
+
       </div>
     </div>
   );
