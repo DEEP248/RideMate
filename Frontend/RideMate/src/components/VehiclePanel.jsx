@@ -23,30 +23,33 @@ const VehiclePanel = (props) => {
       {[
         {
           name: "Cab",
+          createRide: "car",
           seats: 4,
           eta: "10 mins away",
           desc: "Affordable compact rides",
-          price: "₹193",
+          price: "₹" + props.fare.car,
           img: "https://cn-geo1.uber.com/image-proc/crop/resizecrop/udam/format=auto/width=552/height=368/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC91ZGFtLWFzc2V0cy82NDkzYzI1NS04N2M4LTRlMmUtOTQyOS1jZjcwOWJmMWI4MzgucG5n",
         },
         {
           name: "Moto",
+          createRide: "moto",
           seats: 1,
           eta: "5 mins away",
           desc: "Affordable Moto rides",
-          price: "₹60",
+          price: "₹" + props.fare.moto,
           img: "https://cn-geo1.uber.com/image-proc/crop/resizecrop/udam/format=auto/width=552/height=368/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC91ZGFtLWFzc2V0cy9mY2RkZWNhYS0yZWVlLTQ4ZmUtODdmMC02MTRhYTdjZWU3ZDMucG5n",
         },
         {
           name: "Auto",
+          createRide: "auto",
           seats: 3,
           eta: "3 mins away",
           desc: "Affordable Auto rides",
-          price: "₹100",
+          price: "₹" + props.fare.auto,
           img: "https://cn-geo1.uber.com/image-proc/crop/resizecrop/udam/format=auto/width=552/height=368/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC91ZGFtLWFzc2V0cy8xZGRiOGM1Ni0wMjA0LTRjZTQtODFjZS01NmExMWEwN2ZlOTgucG5n",
         },
       ].map((veh, idx) => (
-        
+
         /* -------------------------------------------------------------- */
         /* EACH VEHICLE CARD                                             */
         /* - Click → Opens Confirm Vehicle Panel                         */
@@ -54,7 +57,10 @@ const VehiclePanel = (props) => {
         /* -------------------------------------------------------------- */
         <div
           key={idx}
-          onClick={() => props.setConfirmVehiclePanel(true)}
+          onClick={() => {
+            props.setConfirmVehiclePanel(true);
+            props.selectVehicle(veh.createRide);
+          }}
           className="
             flex items-center justify-between 
             p-4 rounded-2xl bg-gray-50 border border-gray-200 mb-3 

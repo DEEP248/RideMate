@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import axios from "axios";
 import "remixicon/fonts/remixicon.css";
 
 import LocationSearchPanel from "../components/LocationSearchPanel";
@@ -9,6 +10,8 @@ import ConfirmedVehicle from "../components/ConfirmedVehicle";
 import LookingForDriver from "../components/LookingForDriver";
 import WaitingForDriver from "../components/WaitingForDriver";
 import { Link } from "react-router-dom";
+import { useContext } from "react";
+import { UserDataContext } from "../context/UserContext";
 
 const HomePage = () => {
   // -------------------------------------------------------------
@@ -37,18 +40,77 @@ const HomePage = () => {
   // -------------------------------------------------------------
   const panelRef = useRef(null);
   const panelCloseRef = useRef(null);
+  const bottomContainerRef = useRef(null);
 
   const vehiclepanelRef = useRef(null);
   const confirmVehiclepanelRef = useRef(null);
+  const vehicleFoundRef = useRef(null);
 
   const lookingForDriverpanelRef = useRef(null);
   const waitingForDriverpanelRef = useRef(null);
+
+  const [pickupSuggestions, setPickupSuggestions] = useState([]);
+  const [destinationSuggestions, setDestinationSuggestions] = useState([]);
+  const [activeField, setActiveField] = useState(null);
+  const [fare, setFare] = useState({});
+  const [vehicleType, setVehicleType] = useState(null);
+  const [ride, setRide] = useState(null);
+  const [vehicleFound, setVehicleFound] = useState(false);
+  const [waitingForDriver, setWaitingForDriver] = useState(false);
+
+  const { user } = useContext(UserDataContext);
+
+  const handlePickupChange = async (e) => {
+    setPickup(e.target.value);
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/maps/get-suggestions`,
+        {
+          params: { input: e.target.value },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      setPickupSuggestions(response.data);
+    } catch {
+      // handle error
+    }
+  };
+
+  const handleDestinationChange = async (e) => {
+    setDestination(e.target.value);
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/maps/get-suggestions`,
+        {
+          params: { input: e.target.value },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      setDestinationSuggestions(response.data);
+    } catch {
+      // handle error
+    }
+  };
 
   const submitHandler = (e) => e.preventDefault();
 
   // -------------------------------------------------------------
   // GSAP: SEARCH PANEL EXPANSION / COLLAPSE
   // -------------------------------------------------------------
+  useGSAP(() => {
+    if (!bottomContainerRef.current) return;
+
+    gsap.to(bottomContainerRef.current, {
+      top: panelOpen ? 80 : 468, // 👈 numeric → numeric
+      duration: 0.35,
+      ease: panelOpen ? "power2.out" : "power2.in",
+    });
+  }, [panelOpen]);
+
   useGSAP(() => {
     if (panelOpen) {
       gsap.to(panelRef.current, {
@@ -114,6 +176,61 @@ const HomePage = () => {
   }, [waitingForDriverPanel]);
 
   // -------------------------------------------------------------
+  // GSAP: VEHICLE FOUND PANEL SLIDE-IN / SLIDE-OUT
+  // -------------------------------------------------------------
+  useGSAP(
+    function () {
+      if (vehicleFound) {
+        gsap.to(vehicleFoundRef.current, {
+          transform: "translateY(0)",
+        });
+      } else {
+        gsap.to(vehicleFoundRef.current, {
+          transform: "translateY(100%)",
+        });
+      }
+    },
+    [vehicleFound]
+  );
+
+  async function findTrip() {
+    setvehiclePanel(true);
+    setPanelOpen(false);
+
+    const response = await axios.get(
+      `${import.meta.env.VITE_BASE_URL}/rides/get-fare`,
+      {
+        params: { pickup, destination },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    if (response.status !== 200) return;
+
+    setFare(response.data);
+  }
+
+  async function createRide() {
+    const response = await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/rides/create`,
+      {
+        pickup,
+        destination,
+        vehicleType,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    if (response.status !== 200) return;
+  }
+
+  // -------------------------------------------------------------
   // RENDER UI
   // -------------------------------------------------------------
   return (
@@ -159,7 +276,7 @@ const HomePage = () => {
         {/* ========================================================= */}
         {/* FIND TRIP — SEARCH INPUT PANEL                            */}
         {/* ========================================================= */}
-        <div className="absolute bottom-0 left-0 right-0">
+        <div ref={bottomContainerRef} className="absolute bottom-0 left-0 right-0">
           <div className="bg-white rounded-t-3xl px-6 pt-7 pb-6 shadow-2xl border-t relative">
             {/* ------------------------------------------------------ */}
             {/* SLIDE-DOWN HANDLE (Improved UX — clean rounded bar)    */}
@@ -184,8 +301,11 @@ const HomePage = () => {
                 <i className="ri-map-pin-fill absolute left-3 top-3.5 text-lg text-gray-500"></i>
                 <input
                   value={pickup}
-                  onChange={(e) => setPickup(e.target.value)}
-                  onClick={() => setPanelOpen(true)}
+                  onChange={handlePickupChange}
+                  onClick={() => {
+                    setPanelOpen(true);
+                    setActiveField("pickup");
+                  }}
                   className="bg-gray-100 pl-10 pr-4 py-3 rounded-xl w-full text-sm border border-gray-200 focus:ring-2 focus:ring-yellow-300 focus:border-yellow-400"
                   placeholder="Add a pickup location"
                   type="text"
@@ -197,14 +317,35 @@ const HomePage = () => {
                 <i className="ri-flag-fill absolute left-3 top-3.5 text-lg text-gray-500"></i>
                 <input
                   value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                  onClick={() => setPanelOpen(true)}
+                  onChange={handleDestinationChange}
+                  onClick={() => {
+                    setPanelOpen(true);
+                    setActiveField("destination");
+                  }}
                   className="bg-gray-100 pl-10 pr-4 py-3 rounded-xl w-full text-sm border border-gray-200 focus:ring-2 focus:ring-yellow-300 focus:border-yellow-400"
                   placeholder="Enter your destination"
                   type="text"
                 />
               </div>
             </form>
+            {panelOpen && (
+              <button
+                onClick={findTrip}
+                className="
+      mt-4 w-full py-1 rounded-xl
+      bg-black text-white
+      font-semibold text-sm cursor-pointer
+      flex items-center justify-center gap-2
+      hover:bg-yellow-400 hover:text-black
+      active:scale-[0.98]
+      transition-all
+      shadow-md
+    "
+              >
+                <i className="ri-search-line text-lg"></i>
+                Find Ride
+              </button>
+            )}
           </div>
 
           {/* EXPANDING SEARCH RESULTS PANEL */}
@@ -214,10 +355,18 @@ const HomePage = () => {
             style={{ overflowY: "auto" }}
           >
             <LocationSearchPanel
-              vehiclePanel={vehiclePanel}
-              setvehiclePanel={setvehiclePanel}
+              suggestions={
+                activeField === "pickup"
+                  ? pickupSuggestions
+                  : destinationSuggestions
+              }
               setPanelOpen={setPanelOpen}
+              setvehiclePanel={setvehiclePanel}
+              vehiclePanel={vehiclePanel}
               panelOpen={panelOpen}
+              setPickup={setPickup}
+              setDestination={setDestination}
+              activeField={activeField}
             />
           </div>
         </div>
@@ -235,6 +384,8 @@ const HomePage = () => {
 "
         >
           <VehiclePanel
+            fare={fare}
+            selectVehicle={setVehicleType}
             setvehiclePanel={setvehiclePanel}
             setConfirmVehiclePanel={setConfirmVehiclePanel}
           />
@@ -253,6 +404,11 @@ const HomePage = () => {
 "
         >
           <ConfirmedVehicle
+            createRide={createRide}
+            pickup={pickup}
+            destination={destination}
+            fare={fare}
+            vehicleType={vehicleType}
             setConfirmVehiclePanel={setConfirmVehiclePanel}
             setLookingForDriverPanel={setLookingForDriverPanel}
           />
@@ -268,6 +424,12 @@ const HomePage = () => {
 "
         >
           <LookingForDriver
+            createRide={createRide}
+            pickup={pickup}
+            destination={destination}
+            fare={fare}
+            vehicleType={vehicleType}
+            setVehicleFound={setVehicleFound}
             setLookingForDriverPanel={setLookingForDriverPanel}
           />
         </div>
@@ -282,6 +444,10 @@ const HomePage = () => {
 "
         >
           <WaitingForDriver
+            ride={ride}
+            setVehicleFound={setVehicleFound}
+            setWaitingForDriver={setWaitingForDriver}
+            waitingForDriver={waitingForDriver}
             setWaitingForDriverPanel={setWaitingForDriverPanel}
           />
         </div>

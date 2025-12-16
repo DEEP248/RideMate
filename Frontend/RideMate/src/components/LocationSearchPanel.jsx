@@ -1,21 +1,22 @@
 import React from "react";
 
-// ----------------------------------------------------------------------
-// TEMPORARY STATIC LOCATION DATA
-// Will be replaced by real-time Google Places / backend search results
-// ----------------------------------------------------------------------
-const dummyLocations = [
-  "24B, Near Kapoor's Cafe, Sheriyans Coding School, Bhopal",
-  "221B Residency Road, Near Central Mall, Bhopal",
-  "18 Sunrise Colony, Lalghati Square, Bhopal",
-  "7A Tech Park, MP Nagar Zone-1, Bhopal",
-  "11 Harmony Street, Old City Area, Bhopal"
-];
-
 const LocationSearchPanel = ({
   setvehiclePanel,
-  setPanelOpen
+  setPanelOpen,
+  suggestions,
+  setPickup,
+  setDestination,
+  activeField,
 }) => {
+  const handleSuggestionClick = (suggestion) => {
+    if (activeField === "pickup") {
+      setPickup(suggestion);
+    } else if (activeField === "destination") {
+      setDestination(suggestion);
+    }
+    // setVehiclePanel(true)
+    // setPanelOpen(false)
+  };
   return (
     <div className="px-5 py-4 max-h-[55vh] overflow-y-auto">
 
@@ -34,12 +35,13 @@ const LocationSearchPanel = ({
       {/*      2) Open vehicle selection panel                                */}
       {/* ------------------------------------------------------------------ */}
       <div className="space-y-2">
-        {dummyLocations.map((loc, idx) => (
+        {suggestions.map((loc, idx) => (
           <div
             key={idx}
             onClick={() => {
-              setvehiclePanel(true);  // Open vehicle panel
-              setPanelOpen(false);    // Close location panel
+              // setvehiclePanel(true); // Open vehicle panel
+              // setPanelOpen(false); // Close location panel
+              handleSuggestionClick(loc);
             }}
             className="
               flex items-start gap-3 p-3 
@@ -61,9 +63,7 @@ const LocationSearchPanel = ({
 
             {/* Location text block */}
             <div className="flex-1">
-              <p className="text-[13px] font-medium text-gray-800">
-                {loc}
-              </p>
+              <p className="text-[13px] font-medium text-gray-800">{loc}</p>
 
               <p className="text-[11px] text-gray-400 mt-1">
                 Tap to set this location

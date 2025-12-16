@@ -40,9 +40,7 @@ const LookingForDriver = (props) => {
             <h4 className="text-sm font-semibold text-gray-900">
               Pickup location
             </h4>
-            <p className="text-xs text-gray-500 mt-0.5">
-              562/11-A, Kankariya Talav, Ahmedabad
-            </p>
+            <p className="text-xs text-gray-500 mt-0.5">{props.pickup} </p>
           </div>
         </div>
 
@@ -51,9 +49,7 @@ const LookingForDriver = (props) => {
           <i className="ri-map-pin-2-fill text-lg text-gray-600 mt-1"></i>
           <div>
             <h4 className="text-sm font-semibold text-gray-900">Destination</h4>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Near Gitamandir Bus Depot, Ahmedabad
-            </p>
+            <p className="text-xs text-gray-500 mt-0.5">{props.destination} </p>
           </div>
         </div>
 
@@ -61,7 +57,9 @@ const LookingForDriver = (props) => {
         <div className="flex items-start gap-4 p-4">
           <i className="ri-money-rupee-circle-line text-lg text-gray-600 mt-1"></i>
           <div>
-            <h4 className="text-sm font-semibold text-gray-900">₹193</h4>
+            <h4 className="text-sm font-semibold text-gray-900">
+              ₹{props.fare[props.vehicleType]}
+            </h4>
             <p className="text-xs text-gray-500 mt-0.5">Cash payment</p>
           </div>
         </div>
