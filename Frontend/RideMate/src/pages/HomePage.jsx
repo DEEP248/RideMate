@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import axios from "axios";
@@ -12,6 +12,8 @@ import WaitingForDriver from "../components/WaitingForDriver";
 import { Link } from "react-router-dom";
 import { useContext } from "react";
 import { UserDataContext } from "../context/UserContext";
+import { SocketDataContext } from "../context/SocketContext";
+import { useNavigate } from "react-router-dom";
 
 const HomePage = () => {
   // -------------------------------------------------------------
@@ -56,9 +58,27 @@ const HomePage = () => {
   const [vehicleType, setVehicleType] = useState(null);
   const [ride, setRide] = useState(null);
   const [vehicleFound, setVehicleFound] = useState(false);
-  const [waitingForDriver, setWaitingForDriver] = useState(false);
+
+  const navigate = useNavigate();
 
   const { user } = useContext(UserDataContext);
+  const { socket } = useContext(SocketDataContext);
+
+  useEffect(() => {
+    socket.emit("join", { userType: "user", userId: user._id });
+  }, [user]);
+
+  socket.on("ride-confirmed", (ride) => {
+    setVehicleFound(false);
+    setWaitingForDriverPanel(true);
+    setRide(ride);
+  });
+
+  socket.on("ride-started", (ride) => {
+    console.log("ride");
+    setWaitingForDriverPanel(false);
+    navigate("/riding", { state: { ride } }); // Updated navigate to include ride data
+  });
 
   const handlePickupChange = async (e) => {
     setPickup(e.target.value);
@@ -276,7 +296,10 @@ const HomePage = () => {
         {/* ========================================================= */}
         {/* FIND TRIP — SEARCH INPUT PANEL                            */}
         {/* ========================================================= */}
-        <div ref={bottomContainerRef} className="absolute bottom-0 left-0 right-0">
+        <div
+          ref={bottomContainerRef}
+          className="absolute bottom-0 left-0 right-0"
+        >
           <div className="bg-white rounded-t-3xl px-6 pt-7 pb-6 shadow-2xl border-t relative">
             {/* ------------------------------------------------------ */}
             {/* SLIDE-DOWN HANDLE (Improved UX — clean rounded bar)    */}
@@ -446,9 +469,8 @@ const HomePage = () => {
           <WaitingForDriver
             ride={ride}
             setVehicleFound={setVehicleFound}
-            setWaitingForDriver={setWaitingForDriver}
-            waitingForDriver={waitingForDriver}
             setWaitingForDriverPanel={setWaitingForDriverPanel}
+            waitingForDriverPanel={waitingForDriverPanel}
           />
         </div>
       </div>

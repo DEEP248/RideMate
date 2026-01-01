@@ -1,6 +1,7 @@
 import React from "react";
 
 const RidePopUp = (props) => {
+  console.log("RIDE POPUP PROPS:", props);
   return (
     <div className="relative pb-6 px-2">
       {/* ===================================================== */}
@@ -28,7 +29,7 @@ const RidePopUp = (props) => {
             src="https://www.shutterstock.com/image-photo/outdoor-photo-middle-eastern-30s-260nw-2543704497.jpg"
             alt="Rider"
           />
-          <h2 className="text-base font-semibold">Deep Darji</h2>
+          <h2 className="text-base font-semibold">{props.ride?.user?.fullname?.firstname + " " + props.ride?.user?.fullname?.lastname}</h2>
         </div>
 
         <span className="text-sm font-semibold">2.2 km away</span>
@@ -44,8 +45,8 @@ const RidePopUp = (props) => {
           <div>
             <h4 className="text-sm font-semibold">Pickup</h4>
             <p className="text-xs text-gray-500">
-              562/11-A, Kankariya Talav, Ahmedabad
-            </p>
+                {props.ride?.pickup}
+              </p>
           </div>
         </div>
 
@@ -55,7 +56,7 @@ const RidePopUp = (props) => {
           <div>
             <h4 className="text-sm font-semibold">Destination</h4>
             <p className="text-xs text-gray-500">
-              Near Gitamandir Bus Depot, Ahmedabad
+                {props.ride?.destination}
             </p>
           </div>
         </div>
@@ -64,7 +65,7 @@ const RidePopUp = (props) => {
         <div className="flex items-start gap-4 p-4">
           <i className="ri-money-rupee-circle-line text-lg text-gray-600 mt-1"></i>
           <div>
-            <h4 className="text-sm font-semibold">₹193</h4>
+            <h4 className="text-sm font-semibold">₹{props.ride?.fare}</h4>
             <p className="text-xs text-gray-500">Cash payment</p>
           </div>
         </div>
@@ -90,6 +91,7 @@ const RidePopUp = (props) => {
         <button
           onClick={() => {
             props.setconfirmridePopupPanel(true);
+            props.confirmRide();
           }}
           className="
       flex-1 py-3 rounded-xl cursor-pointer

@@ -5,12 +5,60 @@ import { Link } from "react-router-dom";
 import CaptainDetails from "./CaptainDetails";
 import RidePopUp from "../components/RidePopUp";
 import ConfirmRidePopUp from "../components/ConfirmRidePopUp";
+import { useEffect, useContext } from "react";
+import { SocketDataContext } from "../context/SocketContext";
+import { CaptainDataContext } from "../context/CaptainContext";
+import axios from "axios";
 
 const CaptainHome = () => {
-  const [ridePopupPanel, setridePopupPanel] = useState(true);
+  const [ridePopupPanel, setridePopupPanel] = useState(false);
   const [confirmridePopupPanel, setconfirmridePopupPanel] = useState(false);
+  const [ride, setRide] = useState(null);
   const ridePopupPanelRef = useRef(null);
   const confirmridePopupPanelRef = useRef(null);
+  const { socket } = useContext(SocketDataContext);
+  const { captain } = useContext(CaptainDataContext);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    console.log("CAPTAIN SOCKET ID:", socket.id);
+
+    socket.emit("join", {
+      userId: captain._id,
+      userType: "captain",
+    });
+
+    const onNewRide = (data) => {
+      console.log("NEW RIDE RECEIVED:", data);
+      setRide(data);
+      setridePopupPanel(true);
+    };
+
+    socket.on("new-ride", onNewRide);
+
+    return () => {
+      socket.off("new-ride", onNewRide);
+    };
+  }, [socket, captain._id]);
+
+  async function confirmRide() {
+    const response = await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/rides/confirm`,
+      {
+        rideId: ride._id,
+        captainId: captain._id,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    setridePopupPanel(false);
+    setconfirmridePopupPanel(true);
+  }
 
   useGSAP(() => {
     gsap.to(ridePopupPanelRef.current, {
@@ -98,6 +146,8 @@ const CaptainHome = () => {
         <RidePopUp
           setridePopupPanel={setridePopupPanel}
           setconfirmridePopupPanel={setconfirmridePopupPanel}
+          confirmRide={confirmRide}
+          ride={ride}
         />
       </div>
 
@@ -111,6 +161,7 @@ const CaptainHome = () => {
   "
       >
         <ConfirmRidePopUp
+          ride={ride}
           setconfirmridePopupPanel={setconfirmridePopupPanel}
           setridePopupPanel={setridePopupPanel}
         />

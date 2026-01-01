@@ -17,6 +17,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Riding from "./pages/Riding.jsx";
 import CaptainRiding from "./pages/CaptainRiding.jsx";
+import SocketContextProvider  from "./context/SocketContextProvider.jsx";
 
 const App = () => {
   return (
@@ -32,47 +33,49 @@ const App = () => {
       />
       <CaptainContextProvider>
         <UserContextProvider>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<UserLogin />} />
-            <Route path="/riding" element={<Riding />} />
-            <Route path="/signup" element={<UserSignup />} />
-            <Route path="/captain-login" element={<CaptainLogin />} />
-            <Route path="/captain-signup" element={<CaptainSignup />} />
-            <Route path="/captain-riding" element={<CaptainRiding />} />
-            <Route
-              path="/home"
-              element={
-                <UserProtectedWrapper>
-                  <HomePage />
-                </UserProtectedWrapper>
-              }
-            />
-            <Route
-              path="/user/logout"
-              element={
-                <UserProtectedWrapper>
-                  <UserLogout />
-                </UserProtectedWrapper>
-              }
-            />
-            <Route
-              path="/captain-home"
-              element={
-                <CaptainProtectWrapper>
-                  <CaptainHome />
-                </CaptainProtectWrapper>
-              }
-            />
-            <Route
-              path="/captain/logout"
-              element={
-                <CaptainProtectWrapper>
-                  <CaptainLogout />
-                </CaptainProtectWrapper>
-              }
-            />
-          </Routes>
+          <SocketContextProvider>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<UserLogin />} />
+              <Route path="/riding" element={<Riding />} />
+              <Route path="/signup" element={<UserSignup />} />
+              <Route path="/captain-login" element={<CaptainLogin />} />
+              <Route path="/captain-signup" element={<CaptainSignup />} />
+              <Route path="/captain-riding" element={<CaptainRiding />} />
+              <Route
+                path="/home"
+                element={
+                  <UserProtectedWrapper>
+                    <HomePage />
+                  </UserProtectedWrapper>
+                }
+              />
+              <Route
+                path="/user/logout"
+                element={
+                  <UserProtectedWrapper>
+                    <UserLogout />
+                  </UserProtectedWrapper>
+                }
+              />
+              <Route
+                path="/captain-home"
+                element={
+                  <CaptainProtectWrapper>
+                    <CaptainHome />
+                  </CaptainProtectWrapper>
+                }
+              />
+              <Route
+                path="/captain/logout"
+                element={
+                  <CaptainProtectWrapper>
+                    <CaptainLogout />
+                  </CaptainProtectWrapper>
+                }
+              />
+            </Routes>
+          </SocketContextProvider>
         </UserContextProvider>
       </CaptainContextProvider>
     </>

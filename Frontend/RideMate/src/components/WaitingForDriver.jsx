@@ -17,7 +17,6 @@ import React from "react";
 const WaitingForDriver = (props) => {
   return (
     <div className="relative pb-6 px-2">
-      
       {/* ------------------------------------------------------ */}
       {/* Slide-down handle                                      */}
       {/* UX cue: indicates this panel can be dismissed          */}
@@ -33,7 +32,6 @@ const WaitingForDriver = (props) => {
       {/* Driver & Vehicle Summary Header                        */}
       {/* ------------------------------------------------------ */}
       <div className="flex items-center justify-between mb-4">
-        
         {/* Vehicle thumbnail */}
         <img
           className="h-12"
@@ -43,13 +41,16 @@ const WaitingForDriver = (props) => {
 
         {/* Driver details */}
         <div className="text-right">
-          <h2 className="text-lg font-medium">Deep</h2>
+          <h2 className="text-lg font-medium capitalize">
+            {props.ride?.captain.fullname.firstname}
+          </h2>
           <h4 className="text-xl font-semibold -mt-1 -mb-1">
-            MP04 AB 1234
+            {props.ride?.captain.vehicle.plate}
           </h4>
-          <p className="text-sm text-gray-500">
-            Maruti Suzuki Alto
-          </p>
+          <p className="text-sm text-gray-500">Maruti Suzuki Alto</p>
+          <h4 className="text-sm text-gray-500 mt-2">
+            otp : <span className="font-bold">{props.ride?.otp}</span>
+          </h4>
         </div>
       </div>
 
@@ -57,7 +58,6 @@ const WaitingForDriver = (props) => {
       {/* Trip Summary Card                                      */}
       {/* ------------------------------------------------------ */}
       <div className="bg-gray-50 rounded-2xl border border-gray-200 shadow-sm divide-y">
-        
         {/* Pickup location */}
         <div className="flex items-start gap-4 p-4">
           <i className="ri-map-pin-user-fill text-lg text-gray-600 mt-1"></i>
@@ -65,9 +65,7 @@ const WaitingForDriver = (props) => {
             <h4 className="text-sm font-semibold text-gray-900">
               Pickup location
             </h4>
-            <p className="text-xs text-gray-500 mt-0.5">
-              562/11-A, Kankariya Talav, Ahmedabad
-            </p>
+            <p className="text-xs text-gray-500 mt-0.5">{props.ride?.pickup}</p>
           </div>
         </div>
 
@@ -75,11 +73,9 @@ const WaitingForDriver = (props) => {
         <div className="flex items-start gap-4 p-4">
           <i className="ri-map-pin-2-fill text-lg text-gray-600 mt-1"></i>
           <div>
-            <h4 className="text-sm font-semibold text-gray-900">
-              Destination
-            </h4>
+            <h4 className="text-sm font-semibold text-gray-900">Destination</h4>
             <p className="text-xs text-gray-500 mt-0.5">
-              Near Gitamandir Bus Depot, Ahmedabad
+              {props.ride?.destination}
             </p>
           </div>
         </div>
@@ -89,11 +85,9 @@ const WaitingForDriver = (props) => {
           <i className="ri-money-rupee-circle-line text-lg text-gray-600 mt-1"></i>
           <div>
             <h4 className="text-sm font-semibold text-gray-900">
-              ₹193
+              ₹{props.ride?.fare}
             </h4>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Cash payment
-            </p>
+            <p className="text-xs text-gray-500 mt-0.5">Cash payment</p>
           </div>
         </div>
       </div>

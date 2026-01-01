@@ -1,4 +1,8 @@
+import React, { useContext } from "react";
+import { CaptainDataContext } from "../context/CaptainContext";
+
 const CaptainDetails = () => {
+  const { captain } = useContext(CaptainDataContext);
   return (
     <div className="flex flex-col gap-6">
       {/* Top row */}
@@ -9,7 +13,7 @@ const CaptainDetails = () => {
             src="https://www.shutterstock.com/image-photo/outdoor-photo-middle-eastern-30s-260nw-2543704497.jpg"
             alt=""
           />
-          <h4 className="text-lg font-medium">Deep Darji</h4>
+          <h4 className="text-lg font-medium">{captain.fullname.firstname + " " + captain.fullname.lastname}</h4>
         </div>
 
         <div className="text-right">
