@@ -20,19 +20,56 @@ const CaptainHome = () => {
   const { captain } = useContext(CaptainDataContext);
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !captain?._id) return;
 
-    console.log("CAPTAIN SOCKET ID:", socket.id);
+    const updateLocation = () => {
+      if (!navigator.geolocation) {
+        console.log("Geolocation not supported");
+        return;
+      }
 
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          socket.emit("update-location-captain", {
+            userId: captain._id,
+            location: {
+              ltd: position.coords.latitude,
+              lng: position.coords.longitude,
+            },
+          });
+
+          console.log("Location sent");
+        },
+        (err) => {
+          console.error("Location error:", err.message);
+        },
+        { enableHighAccuracy: true }
+      );
+    };
+
+    updateLocation(); // 🔥 THIS triggers permission popup
+    const interval = setInterval(updateLocation, 10000);
+
+    return () => clearInterval(interval);
+  }, [socket, captain?._id]);
+
+  useEffect(() => {
+    if (!socket || !captain?._id) return;
+
+    console.log("🟢 Captain joining socket:", socket.id);
+
+    // 🔗 Join socket (VERY IMPORTANT)
     socket.emit("join", {
       userId: captain._id,
       userType: "captain",
     });
 
+    // 👂 Listen for new ride
     const onNewRide = (data) => {
-      console.log("NEW RIDE RECEIVED:", data);
-      setRide(data);
-      setridePopupPanel(true);
+      console.log("🚕 NEW RIDE RECEIVED:", data);
+
+      setRide(data); // ✅ set ride
+      setridePopupPanel(true); // ✅ open popup
     };
 
     socket.on("new-ride", onNewRide);
@@ -40,25 +77,54 @@ const CaptainHome = () => {
     return () => {
       socket.off("new-ride", onNewRide);
     };
-  }, [socket, captain._id]);
+  }, [socket, captain?._id]);
 
   async function confirmRide() {
-    const response = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/rides/confirm`,
-      {
-        rideId: ride._id,
-        captainId: captain._id,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      }
-    );
+    const token = localStorage.getItem("token");
 
-    setridePopupPanel(false);
-    setconfirmridePopupPanel(true);
+    if (!token) {
+      console.log("❌ No token found, redirecting to login");
+      // optional redirect
+      window.location.href = "/captain-login";
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/rides/confirm`,
+        {
+          rideId: ride._id,
+          captainId: captain._id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setridePopupPanel(false);
+      setconfirmridePopupPanel(true);
+    } catch (error) {
+      console.error(
+        "Confirm ride failed:",
+        error.response?.data || error.message
+      );
+
+      if (error.response?.status === 401) {
+        window.location.href = "/captain-login";
+      }
+    }
   }
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      console.log("❌ Captain not logged in");
+      window.location.href = "/captain-login";
+    }
+  }, []);
 
   useGSAP(() => {
     gsap.to(ridePopupPanelRef.current, {
@@ -144,10 +210,10 @@ const CaptainHome = () => {
         "
       >
         <RidePopUp
+          ride={ride}
           setridePopupPanel={setridePopupPanel}
           setconfirmridePopupPanel={setconfirmridePopupPanel}
           confirmRide={confirmRide}
-          ride={ride}
         />
       </div>
 
