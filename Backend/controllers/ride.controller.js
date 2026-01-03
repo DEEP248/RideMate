@@ -28,7 +28,7 @@ module.exports.createRide = async (req, res) => {
       pickupCoordinates.lng,
       2000
     );
-    console.log(captainsInRadius);
+    console.log("Captains in radius:", captainsInRadius);
 
     ride.otp = "";
 
@@ -36,12 +36,50 @@ module.exports.createRide = async (req, res) => {
       .findOne({ _id: ride._id })
       .populate("user");
 
-    captainsInRadius.map((captain) => {
-      sendMessageToSocketId(captain.socketId, {
-        event: "new-ride",
-        data: rideWithUser,
+    // Attempt delivery only to currently connected sockets
+    let attempted = captainsInRadius.length;
+    let delivered = 0;
+
+    for (const captain of captainsInRadius) {
+      if (!captain?.socketId) continue;
+      try {
+        const ok = sendMessageToSocketId(captain.socketId, {
+          event: "new-ride",
+          data: rideWithUser,
+        });
+        if (ok) delivered++;
+      } catch (err) {
+        console.error("Error sending new-ride to captain:", err.message || err);
+      }
+    }
+
+    console.log(`Attempted new-ride to ${attempted} captains, delivered to ${delivered}`);
+
+    // Fallback: if none delivered, notify other active captains with socketIds
+    if (delivered === 0) {
+      console.log("No connected captains in radius — falling back to active captains with socketIds");
+      const captainModel = require("../models/captain.model");
+      const fallbackCaptains = await captainModel.find({
+        status: "active",
+        socketId: { $exists: true },
       });
-    });
+
+      let fallbackDelivered = 0;
+      for (const captain of fallbackCaptains) {
+        if (!captain?.socketId) continue;
+        try {
+          const ok = sendMessageToSocketId(captain.socketId, {
+            event: "new-ride",
+            data: rideWithUser,
+          });
+          if (ok) fallbackDelivered++;
+        } catch (err) {
+          console.error("Error sending fallback new-ride:", err.message || err);
+        }
+      }
+
+      console.log(`Fallback attempt sent to ${fallbackCaptains.length} captains, delivered to ${fallbackDelivered}`);
+    }
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: err.message });

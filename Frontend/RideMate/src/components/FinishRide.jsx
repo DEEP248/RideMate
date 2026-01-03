@@ -1,7 +1,29 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const FinishRide = (props) => {
+  const navigate = useNavigate();
+
+  async function endRide() {
+    const response = await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/rides/end-ride`,
+      {
+        rideId: props.ride._id,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      navigate("/captain-home");
+    }
+  }
+
   return (
     <div className="relative h-screen w-full bg-white flex flex-col">
       {/* ===================================================== */}
@@ -37,7 +59,9 @@ const FinishRide = (props) => {
             alt="Rider"
           />
           <div>
-            <h2 className="text-base font-semibold">Deep Darji</h2>
+            <h2 className="text-base font-semibold">
+              {props.ride?.user.fullname.firstname}
+            </h2>
             <p className="text-xs text-black/70">Pickup nearby</p>
           </div>
         </div>
@@ -54,9 +78,7 @@ const FinishRide = (props) => {
             <i className="ri-map-pin-user-fill text-lg text-gray-600 mt-1"></i>
             <div>
               <h4 className="text-sm font-semibold">Pickup</h4>
-              <p className="text-xs text-gray-500">
-                562/11-A, Kankariya Talav, Ahmedabad
-              </p>
+              <p className="text-xs text-gray-500">{props.ride?.pickup}</p>
             </div>
           </div>
 
@@ -65,9 +87,7 @@ const FinishRide = (props) => {
             <i className="ri-map-pin-2-fill text-lg text-gray-600 mt-1"></i>
             <div>
               <h4 className="text-sm font-semibold">Destination</h4>
-              <p className="text-xs text-gray-500">
-                Near Gitamandir Bus Depot, Ahmedabad
-              </p>
+              <p className="text-xs text-gray-500">{props.ride?.destination}</p>
             </div>
           </div>
 
@@ -75,7 +95,7 @@ const FinishRide = (props) => {
           <div className="flex gap-4 p-4">
             <i className="ri-money-rupee-circle-line text-lg text-gray-600 mt-1"></i>
             <div>
-              <h4 className="text-sm font-semibold">₹193</h4>
+              <h4 className="text-sm font-semibold">₹{props.ride?.fare}</h4>
               <p className="text-xs text-gray-500">Cash payment</p>
             </div>
           </div>
@@ -96,8 +116,8 @@ const FinishRide = (props) => {
 "
       >
         {/* Confirm */}
-        <Link
-          to="/captain-home"
+        <button
+          onClick={endRide}
           className="
     w-full flex items-center justify-center
     py-2 rounded-xl
@@ -110,7 +130,7 @@ const FinishRide = (props) => {
   "
         >
           Complete Ride
-        </Link>
+        </button>
 
         <p className="px-5 text-xs text-red-600 font-medium text-center mb-5 mt-4">
           ⚠️ Once completed, this ride cannot be modified or reopened

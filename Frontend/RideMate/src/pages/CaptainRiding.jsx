@@ -1,13 +1,16 @@
 import React, { useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import FinishRide from "../components/FinishRide";
+import LiveTracking from "../components/LiveTracking";
 
 const CaptainRiding = () => {
   const [finishridePopupPanel, setfinishridePopupPanel] = useState(false);
 
   const finishidePopupPanelRef = useRef(null);
+  const location = useLocation();
+  const rideData = location.state?.ride;
 
   useGSAP(() => {
     gsap.to(finishidePopupPanelRef.current, {
@@ -42,20 +45,16 @@ const CaptainRiding = () => {
       {/* MAP LAYER                                        */}
       {/* ================================================= */}
       <div className="absolute inset-0 h-4/5">
-        <img
-          className="h-full w-full object-cover"
-          src="https://miro.medium.com/v2/resize:fit:4800/format:webp/0*gwMx05pqII5hbfmX.gif"
-          alt="Map"
-        />
+        <LiveTracking />
       </div>
 
       {/* ================================================= */}
       {/* BOTTOM RIDE STATUS BAR                            */}
       {/* ================================================= */}
-      <div className="absolute bottom-0 left-0 right-0 h-[20vh] bg-yellow-300 rounded-t-3xl px-5 pt-4 pb-6"
+      <div
+        className="absolute bottom-0 left-0 right-0 h-[20vh] bg-yellow-300 rounded-t-3xl px-5 pt-4 pb-6"
         onClick={() => setfinishridePopupPanel(true)}
       >
-        
         {/* Drag handle */}
         <div className="w-full flex justify-center mb-4 cursor-pointer">
           <i className="ri-arrow-up-wide-line text-2xl text-black/70"></i>
@@ -91,7 +90,14 @@ const CaptainRiding = () => {
     flex flex-col
   "
       >
-        <FinishRide  setfinishridePopupPanel={setfinishridePopupPanel}/>
+        <FinishRide
+          ride={rideData}
+          setfinishridePopupPanel={setfinishridePopupPanel}
+        />
+      </div>
+
+      <div className="h-screen fixed w-screen top-0 z-[-1]">
+        <LiveTracking />
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ import { useEffect, useContext } from "react";
 import { SocketDataContext } from "../context/SocketContext";
 import { CaptainDataContext } from "../context/CaptainContext";
 import axios from "axios";
+import LiveTracking from "../components/LiveTracking";
 
 const CaptainHome = () => {
   const [ridePopupPanel, setridePopupPanel] = useState(false);
@@ -165,11 +166,7 @@ const CaptainHome = () => {
       {/* MAP LAYER                                        */}
       {/* ================================================= */}
       <div className="absolute inset-0">
-        <img
-          className="h-full w-full object-cover"
-          src="https://miro.medium.com/v2/resize:fit:4800/format:webp/0*gwMx05pqII5hbfmX.gif"
-          alt="Map"
-        />
+        <LiveTracking />
       </div>
 
       {/* ================================================= */}

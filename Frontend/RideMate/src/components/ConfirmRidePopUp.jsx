@@ -1,10 +1,32 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const ConfirmRidePopUp = (props) => {
-  const [otp, setotp] = useState('')
+  const [otp, setotp] = useState("");
+  const navigate = useNavigate();
+
   const submitHandler = async (e) => {
     e.preventDefault();
+    const response = await axios.get(
+      `${import.meta.env.VITE_BASE_URL}/rides/start-ride`,
+      {
+        params: {
+          rideId: props.ride._id,
+          otp: otp,
+        },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      props.setconfirmridePopupPanel(false);
+      props.setridePopupPanel(false);
+      navigate("/captain-riding", { state: { ride: props.ride } });
+    }
   };
   return (
     <div className="relative h-screen w-full bg-white flex flex-col">
@@ -105,8 +127,8 @@ const ConfirmRidePopUp = (props) => {
 
             <input
               value={otp}
-              onChange={(e)=>{
-                  setotp(e.target.value)
+              onChange={(e) => {
+                setotp(e.target.value);
               }}
               type="tel"
               inputMode="numeric"
@@ -144,7 +166,7 @@ const ConfirmRidePopUp = (props) => {
             </button>
 
             {/* Confirm */}
-            <Link
+            <button
               to="/captain-riding"
               className="
     flex-1 flex items-center justify-center
@@ -156,7 +178,7 @@ const ConfirmRidePopUp = (props) => {
   "
             >
               Confirm Ride
-            </Link>
+            </button>
           </div>
         </form>
       </div>

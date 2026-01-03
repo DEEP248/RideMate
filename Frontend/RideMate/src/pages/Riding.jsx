@@ -1,5 +1,9 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { SocketDataContext } from "../context/SocketContext";
+import LiveTracking from "../components/LiveTracking";
 
 /**
  * Riding
@@ -19,6 +23,15 @@ import { Link } from "react-router-dom";
  * - Split screen: Map (top 50%) + Ride details (bottom 50%)
  */
 const Riding = () => {
+  const location = useLocation();
+  const { ride } = location.state || {}; // Retrieve ride data
+  const { socket } = useContext(SocketDataContext);
+  const navigate = useNavigate();
+
+  socket.on("ride-ended", () => {
+    navigate("/home");
+  });
+
   return (
     <div className="h-screen">
       {/* -------------------------------------------------- */}
@@ -39,11 +52,7 @@ const Riding = () => {
       {/* MAP SECTION (Live Ride Tracking)                   */}
       {/* ================================================== */}
       <div className="absolute inset-0">
-        <img
-          className="h-full w-full object-cover"
-          src="https://miro.medium.com/v2/resize:fit:4800/format:webp/0*gwMx05pqII5hbfmX.gif"
-          alt="Map"
-        />
+        <LiveTracking />
       </div>
 
       {/* ================================================== */}
@@ -61,8 +70,12 @@ const Riding = () => {
           />
 
           <div className="text-right">
-            <h2 className="text-lg font-medium">Deep</h2>
-            <h4 className="text-xl font-semibold -mt-1 -mb-1">MP04 AB 1234</h4>
+            <h2 className="text-lg font-medium capitalize">
+              {ride?.captain.fullname.firstname}
+            </h2>
+            <h4 className="text-xl font-semibold -mt-1 -mb-1">
+              {ride?.captain.vehicle.plate}
+            </h4>
             <p className="text-sm text-gray-500">Maruti Suzuki Alto</p>
           </div>
         </div>
@@ -79,7 +92,7 @@ const Riding = () => {
                 Destination
               </h4>
               <p className="text-xs text-gray-500 mt-0.5">
-                Near Gitamandir Bus Depot, Ahmedabad
+                {ride?.destination}{" "}
               </p>
             </div>
           </div>
@@ -88,7 +101,9 @@ const Riding = () => {
           <div className="flex items-start gap-4 p-4">
             <i className="ri-money-rupee-circle-line text-lg text-gray-600 mt-1"></i>
             <div>
-              <h4 className="text-sm font-semibold text-gray-900">₹193</h4>
+              <h4 className="text-sm font-semibold text-gray-900">
+                ₹{ride?.fare}
+              </h4>
               <p className="text-xs text-gray-500 mt-0.5">Cash payment</p>
             </div>
           </div>

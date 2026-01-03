@@ -14,6 +14,7 @@ import { useContext } from "react";
 import { UserDataContext } from "../context/UserContext";
 import { SocketDataContext } from "../context/SocketContext";
 import { useNavigate } from "react-router-dom";
+import LiveTracking from "../components/LiveTracking";
 
 const HomePage = () => {
   // -------------------------------------------------------------
@@ -299,11 +300,7 @@ const HomePage = () => {
         {/* MAP PLACEHOLDER                                           */}
         {/* ========================================================= */}
         <div className="flex-1 mt-20 rounded-xl overflow-hidden shadow-lg mx-4">
-          <img
-            className="h-full w-full object-cover"
-            src="https://miro.medium.com/v2/resize:fit:4800/format:webp/0*gwMx05pqII5hbfmX.gif"
-            alt="Map"
-          />
+          <LiveTracking />
         </div>
 
         {/* ========================================================= */}
