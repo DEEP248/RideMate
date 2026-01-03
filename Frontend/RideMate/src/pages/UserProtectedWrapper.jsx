@@ -26,8 +26,9 @@ const UserProtectedWrapper = ({ children }) => {
           }
         );
 
-        // Valid token → set user & continue
-        setUser(response.data);
+        // Valid token → set user object & continue
+        console.log("Fetched user profile:", response.data.user);
+        setUser(response.data.user);
       } catch (error) {
         // Block 401 logs
         localStorage.removeItem("token");

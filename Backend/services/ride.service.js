@@ -94,7 +94,7 @@ module.exports.confirmRide = async ({ rideId, captain }) => {
       _id: rideId,
     },
     {
-      status: "accepted",
+      status: "confirmed",
       captain: captain._id,
     }
   );
@@ -131,8 +131,8 @@ module.exports.startRide = async ({ rideId, otp, captain }) => {
     throw new Error("Ride not found");
   }
 
-  if (ride.status !== "accepted") {
-    throw new Error("Ride not accepted");
+  if (ride.status !== "confirmed") {
+    throw new Error("Ride not confirmed");
   }
 
   if (ride.otp !== otp) {

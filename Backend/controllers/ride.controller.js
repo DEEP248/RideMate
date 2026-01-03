@@ -78,10 +78,42 @@ module.exports.confirmRide = async (req, res) => {
       captain: req.captain,
     });
 
-    sendMessageToSocketId(ride.user.socketId, {
-      event: "ride-confirmed",
-      data: ride,
-    });
+    // Send to the user (who is connected)
+    if (ride.user?.socketId) {
+      sendMessageToSocketId(ride.user.socketId, {
+        event: "ride-confirmed",
+        data: ride,
+      });
+      console.log("✅ Event sent to user:", ride.user.socketId);
+    } else {
+      console.log("⚠️ User socketId not found! Trying fresh DB fetch...");
+
+      try {
+        const userModelFresh = require("../models/user.model");
+        const freshUser = await userModelFresh.findById(ride.user._id);
+        console.log("Fetched user for socket check:", freshUser?.socketId);
+
+        if (freshUser?.socketId) {
+          sendMessageToSocketId(freshUser.socketId, {
+            event: "ride-confirmed",
+            data: ride,
+          });
+          console.log("✅ Event sent to user (from fresh fetch):", freshUser.socketId);
+        } else {
+          console.log("⚠️ Still no socketId for user");
+        }
+      } catch (err) {
+        console.error("Error fetching user for socketId:", err.message || err);
+      }
+    }
+
+    // Optionally, notify the captain that the ride was confirmed (not required by user)
+    if (ride.captain?.socketId) {
+      sendMessageToSocketId(ride.captain.socketId, {
+        event: "ride-confirmed-captain",
+        data: ride,
+      });
+    }
 
     return res.status(200).json(ride);
   } catch (err) {

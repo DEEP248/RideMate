@@ -65,10 +65,23 @@ const HomePage = () => {
   const { socket } = useContext(SocketDataContext);
 
   useEffect(() => {
-    socket.emit("join", { userType: "user", userId: user._id });
-  }, [user]);
+    if (!user?._id || !socket) return;
+
+    const emitJoin = () => {
+      console.log("Emitting join for user:", user._id, "socket:", socket.id);
+      socket.emit("join", { userType: "user", userId: user._id });
+    };
+
+    if (socket.connected) {
+      emitJoin();
+    } else {
+      socket.on("connect", emitJoin);
+      return () => socket.off("connect", emitJoin);
+    }
+  }, [user, socket]);
 
   socket.on("ride-confirmed", (ride) => {
+    console.log("ride", ride);
     setVehicleFound(false);
     setWaitingForDriverPanel(true);
     setRide(ride);

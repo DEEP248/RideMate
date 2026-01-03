@@ -17,11 +17,26 @@ function initializeSocket(server) {
 
     socket.on("join", async (data) => {
       const { userId, userType } = data;
+      console.log("JOIN received:", { userId, userType, socketId: socket.id });
 
-      if (userType === "user") {
-        await userModel.findByIdAndUpdate(userId, { socketId: socket.id });
-      } else if (userType === "captain") {
-        await captainModel.findByIdAndUpdate(userId, { socketId: socket.id });
+      try {
+        if (userType === "user") {
+          const updated = await userModel.findByIdAndUpdate(
+            userId,
+            { socketId: socket.id },
+            { new: true }
+          );
+          console.log("Updated user socketId:", updated?.socketId);
+        } else if (userType === "captain") {
+          const updated = await captainModel.findByIdAndUpdate(
+            userId,
+            { socketId: socket.id },
+            { new: true }
+          );
+          console.log("Updated captain socketId:", updated?.socketId);
+        }
+      } catch (err) {
+        console.error("Error updating socketId on join:", err.message || err);
       }
     });
 
